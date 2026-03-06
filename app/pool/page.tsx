@@ -32,7 +32,18 @@ export default async function PoolPage() {
   if (!user) redirect('/login')
 
   const { data: me } = await supabase.from('users').select('*').eq('id', user.id).single()
-  if (!me) redirect('/login')
+  if (!me) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-xl shadow-md w-full max-w-sm p-8 text-center">
+          <h1 className="text-xl font-bold text-gray-800 mb-2">Account Not Found</h1>
+          <p className="text-gray-500 text-sm">
+            Your account hasn&apos;t been set up yet. Contact the commissioner.
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   // Pending approval screen
   if (me.status === 'pending_approval') {

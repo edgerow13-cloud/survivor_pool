@@ -23,16 +23,25 @@ export async function POST(request: NextRequest) {
 
   // If re-entering results, reverse previous eliminations for this week
   if (week.is_results_entered) {
-    await getAdminClient()
+    const { error: resetUsersError } = await getAdminClient()
       .from('users')
       .update({ status: 'active', eliminated_week: null })
       .eq('eliminated_week', week.week_number)
+    if (resetUsersError) {
+      return NextResponse.json({ error: resetUsersError.message }, { status: 500 })
+    }
 
-    await getAdminClient().from('picks').update({ outcome: null }).eq('week_id', week_id)
+    const { error: resetPicksError } = await getAdminClient()
+      .from('picks')
+      .update({ outcome: null })
+      .eq('week_id', week_id)
+    if (resetPicksError) {
+      return NextResponse.json({ error: resetPicksError.message }, { status: 500 })
+    }
   }
 
   // Lock week and record the boot
-  await getAdminClient()
+  const { error: weekUpdateError } = await getAdminClient()
     .from('weeks')
     .update({
       eliminated_contestant_id: eliminated_contestant_id ?? null,
@@ -40,6 +49,9 @@ export async function POST(request: NextRequest) {
       is_locked: true,
     })
     .eq('id', week_id)
+  if (weekUpdateError) {
+    return NextResponse.json({ error: weekUpdateError.message }, { status: 500 })
+  }
 
   // Get all picks for this week and all active users
   const [{ data: picks }, { data: activeUsers }] = await Promise.all([
@@ -90,25 +102,34 @@ export async function POST(request: NextRequest) {
   }
 
   // Apply outcome updates in parallel
-  await Promise.all([
+  const outcomeResults = await Promise.all([
     eliminatedPicks.length > 0
       ? getAdminClient().from('picks').update({ outcome: 'eliminated' }).in('id', eliminatedPicks)
-      : Promise.resolve(),
+      : Promise.resolve({ error: null }),
     safePicks.length > 0
       ? getAdminClient().from('picks').update({ outcome: 'safe' }).in('id', safePicks)
-      : Promise.resolve(),
+      : Promise.resolve({ error: null }),
     noPickIds.length > 0
       ? getAdminClient().from('picks').update({ outcome: 'no_pick' }).in('id', noPickIds)
-      : Promise.resolve(),
-    newNoPicks.length > 0 ? getAdminClient().from('picks').insert(newNoPicks) : Promise.resolve(),
+      : Promise.resolve({ error: null }),
+    newNoPicks.length > 0
+      ? getAdminClient().from('picks').insert(newNoPicks)
+      : Promise.resolve({ error: null }),
   ])
+  const outcomeError = outcomeResults.find((r) => r.error)?.error
+  if (outcomeError) {
+    return NextResponse.json({ error: outcomeError.message }, { status: 500 })
+  }
 
   // Eliminate users
   if (usersToEliminate.length > 0) {
-    await getAdminClient()
+    const { error: eliminateError } = await getAdminClient()
       .from('users')
       .update({ status: 'eliminated', eliminated_week: week.week_number })
       .in('id', usersToEliminate)
+    if (eliminateError) {
+      return NextResponse.json({ error: eliminateError.message }, { status: 500 })
+    }
   }
 
   return NextResponse.json({ ok: true })

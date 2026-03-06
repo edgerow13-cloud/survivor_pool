@@ -12,6 +12,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Missing week_id' }, { status: 400 })
   }
 
+  if (episode_date !== undefined && isNaN(Date.parse(episode_date))) {
+    return NextResponse.json({ error: 'Invalid episode_date' }, { status: 400 })
+  }
+
   const updates: Record<string, unknown> = {}
   if (episode_date !== undefined) updates.episode_date = new Date(episode_date).toISOString()
   if (is_locked !== undefined) updates.is_locked = is_locked

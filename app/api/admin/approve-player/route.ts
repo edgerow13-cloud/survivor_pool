@@ -62,10 +62,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: insertError.message }, { status: 500 })
   }
 
-  await getAdminClient()
+  const { error: updateError } = await getAdminClient()
     .from('join_requests')
     .update({ status: 'approved' })
     .eq('id', join_request_id)
+  if (updateError) {
+    return NextResponse.json({ error: updateError.message }, { status: 500 })
+  }
 
   return NextResponse.json({ ok: true })
 }

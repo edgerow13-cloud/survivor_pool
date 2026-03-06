@@ -7,9 +7,9 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Public routes — no auth required
-  const publicPaths = ['/', '/login', '/join', '/auth/callback']
+  const publicPaths = ['/', '/login', '/auth/callback']
   const isPublic =
-    publicPaths.some((p) => pathname === p || pathname.startsWith('/join/') || pathname.startsWith('/auth/'))
+    publicPaths.some((p) => pathname === p) || pathname.startsWith('/join/')
 
   if (!isPublic && !user) {
     const loginUrl = request.nextUrl.clone()
