@@ -52,7 +52,7 @@ export interface Pick {
   user_id: string
   week_id: string
   contestant_id: string | null
-  outcome: PickOutcome
+  outcome: PickOutcome | null
   is_commissioner_override: boolean
   created_at: string
 }

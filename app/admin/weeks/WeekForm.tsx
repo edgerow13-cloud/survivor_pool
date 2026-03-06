@@ -18,7 +18,7 @@ export default function WeekForm() {
       const res = await fetch('/api/admin/create-week', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ week_number: Number(weekNumber), episode_date: episodeDate }),
+        body: JSON.stringify({ week_number: Number(weekNumber), episode_date: new Date(episodeDate).toISOString() }),
       })
       if (!res.ok) {
         const data = await res.json()
@@ -49,7 +49,7 @@ export default function WeekForm() {
         />
       </div>
       <div>
-        <label className="block text-xs text-gray-500 mb-1">Episode Date &amp; Time</label>
+        <label className="block text-xs text-gray-500 mb-1">Episode Date &amp; Time (your local time)</label>
         <input
           type="datetime-local"
           value={episodeDate}

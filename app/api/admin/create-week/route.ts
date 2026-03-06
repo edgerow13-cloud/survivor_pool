@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
 
   const { error } = await getAdminClient().from('weeks').insert({
     week_number,
-    episode_date: new Date(episode_date).toISOString(),
+    episode_date,
     is_locked: false,
     is_results_entered: false,
   })
