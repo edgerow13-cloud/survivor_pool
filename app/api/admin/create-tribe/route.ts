@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireCommissioner } from '@/lib/require-commissioner'
-import { adminClient } from '@/lib/supabase/admin'
+import { getAdminClient } from '@/lib/supabase/admin'
 
 export async function POST(request: NextRequest) {
   const auth = await requireCommissioner(request)
@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const { error } = await adminClient.from('tribes').insert({
+  const { error } = await getAdminClient().from('tribes').insert({
     name: name.trim(),
     color,
     is_merged: is_merged ?? false,

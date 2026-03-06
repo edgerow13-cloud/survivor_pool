@@ -1,7 +1,7 @@
 import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { adminClient } from '@/lib/supabase/admin'
+import { getAdminClient } from '@/lib/supabase/admin'
 
 export async function requireCommissioner(
   request: NextRequest
@@ -15,7 +15,7 @@ export async function requireCommissioner(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { data } = await adminClient
+  const { data } = await getAdminClient()
     .from('users')
     .select('role')
     .eq('id', user.id)

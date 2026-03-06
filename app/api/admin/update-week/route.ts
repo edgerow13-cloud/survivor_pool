@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireCommissioner } from '@/lib/require-commissioner'
-import { adminClient } from '@/lib/supabase/admin'
+import { getAdminClient } from '@/lib/supabase/admin'
 
 export async function POST(request: NextRequest) {
   const auth = await requireCommissioner(request)
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'No fields to update' }, { status: 400 })
   }
 
-  const { error } = await adminClient.from('weeks').update(updates).eq('id', week_id)
+  const { error } = await getAdminClient().from('weeks').update(updates).eq('id', week_id)
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })

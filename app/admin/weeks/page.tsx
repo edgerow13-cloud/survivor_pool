@@ -1,12 +1,12 @@
-import { adminClient } from '@/lib/supabase/admin'
+import { getAdminClient } from '@/lib/supabase/admin'
 import WeekForm from './WeekForm'
 import WeekRow from './WeekRow'
 
 export default async function WeeksPage() {
   const [{ data: weeks }, { data: contestants }, { data: users }] = await Promise.all([
-    adminClient.from('weeks').select('*').order('week_number', { ascending: true }),
-    adminClient.from('contestants').select('*').order('name'),
-    adminClient
+    getAdminClient().from('weeks').select('*').order('week_number', { ascending: true }),
+    getAdminClient().from('contestants').select('*').order('name'),
+    getAdminClient()
       .from('users')
       .select('*')
       .in('status', ['active', 'eliminated'])

@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { adminClient } from '@/lib/supabase/admin'
+import { getAdminClient } from '@/lib/supabase/admin'
 import JoinForm from './JoinForm'
 
 export default async function JoinPage({
@@ -18,7 +18,7 @@ export default async function JoinPage({
   }
 
   // Validate invite token (requires service role — anon can't read invite_links)
-  const { data: inviteLink } = await adminClient
+  const { data: inviteLink } = await getAdminClient()
     .from('invite_links')
     .select('id')
     .eq('token', token)

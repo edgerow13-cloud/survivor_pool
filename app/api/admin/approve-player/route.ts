@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireCommissioner } from '@/lib/require-commissioner'
-import { adminClient } from '@/lib/supabase/admin'
+import { getAdminClient } from '@/lib/supabase/admin'
 
 export async function POST(request: NextRequest) {
   const auth = await requireCommissioner(request)
@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Missing join_request_id' }, { status: 400 })
   }
 
-  const { data: joinRequest, error: jrError } = await adminClient
+  const { data: joinRequest, error: jrError } = await getAdminClient()
     .from('join_requests')
     .select('*')
     .eq('id', join_request_id)
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Join request is not pending' }, { status: 400 })
   }
 
-  const { data: existingUser } = await adminClient
+  const { data: existingUser } = await getAdminClient()
     .from('users')
     .select('id')
     .eq('email', joinRequest.email)
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
   }
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
-  const { data: authData, error: authError } = await adminClient.auth.admin.inviteUserByEmail(
+  const { data: authData, error: authError } = await getAdminClient().auth.admin.inviteUserByEmail(
     joinRequest.email,
     {
       data: { name: joinRequest.name },
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const { error: insertError } = await adminClient.from('users').insert({
+  const { error: insertError } = await getAdminClient().from('users').insert({
     id: authData.user.id,
     name: joinRequest.name,
     email: joinRequest.email,
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: insertError.message }, { status: 500 })
   }
 
-  await adminClient
+  await getAdminClient()
     .from('join_requests')
     .update({ status: 'approved' })
     .eq('id', join_request_id)

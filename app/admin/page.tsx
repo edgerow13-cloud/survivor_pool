@@ -1,4 +1,4 @@
-import { adminClient } from '@/lib/supabase/admin'
+import { getAdminClient } from '@/lib/supabase/admin'
 
 export default async function AdminOverviewPage() {
   const [
@@ -8,20 +8,20 @@ export default async function AdminOverviewPage() {
     { count: eliminatedCount },
     { count: remainingCount },
   ] = await Promise.all([
-    adminClient
+    getAdminClient()
       .from('join_requests')
       .select('*', { count: 'exact', head: true })
       .eq('status', 'pending'),
-    adminClient.from('weeks').select('*').order('week_number', { ascending: false }).limit(1),
-    adminClient
+    getAdminClient().from('weeks').select('*').order('week_number', { ascending: false }).limit(1),
+    getAdminClient()
       .from('users')
       .select('*', { count: 'exact', head: true })
       .eq('status', 'active'),
-    adminClient
+    getAdminClient()
       .from('users')
       .select('*', { count: 'exact', head: true })
       .eq('status', 'eliminated'),
-    adminClient
+    getAdminClient()
       .from('contestants')
       .select('*', { count: 'exact', head: true })
       .eq('is_eliminated', false),

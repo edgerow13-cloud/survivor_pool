@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireCommissioner } from '@/lib/require-commissioner'
-import { adminClient } from '@/lib/supabase/admin'
+import { getAdminClient } from '@/lib/supabase/admin'
 
 export async function POST(request: NextRequest) {
   const auth = await requireCommissioner(request)
@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Missing join_request_id' }, { status: 400 })
   }
 
-  const { error } = await adminClient
+  const { error } = await getAdminClient()
     .from('join_requests')
     .update({ status: 'rejected' })
     .eq('id', join_request_id)

@@ -1,8 +1,8 @@
-import { adminClient } from '@/lib/supabase/admin'
+import { getAdminClient } from '@/lib/supabase/admin'
 import TribeForm from './TribeForm'
 
 export default async function TribesPage() {
-  const { data: tribes } = await adminClient
+  const { data: tribes } = await getAdminClient()
     .from('tribes')
     .select('*')
     .order('created_at', { ascending: true })

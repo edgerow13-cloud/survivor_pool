@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireCommissioner } from '@/lib/require-commissioner'
-import { adminClient } from '@/lib/supabase/admin'
+import { getAdminClient } from '@/lib/supabase/admin'
 import { randomBytes } from 'crypto'
 
 export async function POST(request: NextRequest) {
@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
 
   const token = randomBytes(16).toString('hex')
 
-  const { error } = await adminClient.from('invite_links').insert({
+  const { error } = await getAdminClient().from('invite_links').insert({
     token,
     created_by: auth.userId,
     is_active: true,

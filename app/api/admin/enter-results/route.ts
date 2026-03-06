@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireCommissioner } from '@/lib/require-commissioner'
-import { adminClient } from '@/lib/supabase/admin'
+import { getAdminClient } from '@/lib/supabase/admin'
 
 export async function POST(request: NextRequest) {
   const auth = await requireCommissioner(request)
@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Missing week_id' }, { status: 400 })
   }
 
-  const { data: week, error: weekError } = await adminClient
+  const { data: week, error: weekError } = await getAdminClient()
     .from('weeks')
     .select('*')
     .eq('id', week_id)
@@ -23,16 +23,16 @@ export async function POST(request: NextRequest) {
 
   // If re-entering results, reverse previous eliminations for this week
   if (week.is_results_entered) {
-    await adminClient
+    await getAdminClient()
       .from('users')
       .update({ status: 'active', eliminated_week: null })
       .eq('eliminated_week', week.week_number)
 
-    await adminClient.from('picks').update({ outcome: null }).eq('week_id', week_id)
+    await getAdminClient().from('picks').update({ outcome: null }).eq('week_id', week_id)
   }
 
   // Lock week and record the boot
-  await adminClient
+  await getAdminClient()
     .from('weeks')
     .update({
       eliminated_contestant_id: eliminated_contestant_id ?? null,
@@ -43,8 +43,8 @@ export async function POST(request: NextRequest) {
 
   // Get all picks for this week and all active users
   const [{ data: picks }, { data: activeUsers }] = await Promise.all([
-    adminClient.from('picks').select('*').eq('week_id', week_id),
-    adminClient.from('users').select('id').eq('status', 'active'),
+    getAdminClient().from('picks').select('*').eq('week_id', week_id),
+    getAdminClient().from('users').select('id').eq('status', 'active'),
   ])
 
   const activeUserIds = new Set((activeUsers ?? []).map((u: { id: string }) => u.id))
@@ -92,20 +92,20 @@ export async function POST(request: NextRequest) {
   // Apply outcome updates in parallel
   await Promise.all([
     eliminatedPicks.length > 0
-      ? adminClient.from('picks').update({ outcome: 'eliminated' }).in('id', eliminatedPicks)
+      ? getAdminClient().from('picks').update({ outcome: 'eliminated' }).in('id', eliminatedPicks)
       : Promise.resolve(),
     safePicks.length > 0
-      ? adminClient.from('picks').update({ outcome: 'safe' }).in('id', safePicks)
+      ? getAdminClient().from('picks').update({ outcome: 'safe' }).in('id', safePicks)
       : Promise.resolve(),
     noPickIds.length > 0
-      ? adminClient.from('picks').update({ outcome: 'no_pick' }).in('id', noPickIds)
+      ? getAdminClient().from('picks').update({ outcome: 'no_pick' }).in('id', noPickIds)
       : Promise.resolve(),
-    newNoPicks.length > 0 ? adminClient.from('picks').insert(newNoPicks) : Promise.resolve(),
+    newNoPicks.length > 0 ? getAdminClient().from('picks').insert(newNoPicks) : Promise.resolve(),
   ])
 
   // Eliminate users
   if (usersToEliminate.length > 0) {
-    await adminClient
+    await getAdminClient()
       .from('users')
       .update({ status: 'eliminated', eliminated_week: week.week_number })
       .in('id', usersToEliminate)

@@ -1,12 +1,12 @@
 import Link from 'next/link'
-import { adminClient } from '@/lib/supabase/admin'
+import { getAdminClient } from '@/lib/supabase/admin'
 import TribeAssignmentRow from './TribeAssignmentRow'
 
 export default async function ContestantsPage() {
   const [{ data: contestants }, { data: tribes }, { data: tribeHistory }] = await Promise.all([
-    adminClient.from('contestants').select('*').order('name'),
-    adminClient.from('tribes').select('*').order('name'),
-    adminClient.from('contestant_tribe_history').select('*'),
+    getAdminClient().from('contestants').select('*').order('name'),
+    getAdminClient().from('tribes').select('*').order('name'),
+    getAdminClient().from('contestant_tribe_history').select('*'),
   ])
 
   // Find latest tribe assignment per contestant

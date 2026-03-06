@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { adminClient } from '@/lib/supabase/admin'
+import { getAdminClient } from '@/lib/supabase/admin'
 
 export async function POST(request: NextRequest) {
   let body: unknown
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
   const trimmedName = name.trim()
 
   // Check invite link is valid and active
-  const { data: inviteLink } = await adminClient
+  const { data: inviteLink } = await getAdminClient()
     .from('invite_links')
     .select('id')
     .eq('token', token)
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Check if user already exists
-  const { data: existingUser } = await adminClient
+  const { data: existingUser } = await getAdminClient()
     .from('users')
     .select('id')
     .eq('email', normalizedEmail)
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Check if pending request already exists
-  const { data: existingRequest } = await adminClient
+  const { data: existingRequest } = await getAdminClient()
     .from('join_requests')
     .select('id, status')
     .eq('email', normalizedEmail)
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Insert join request
-  const { error: insertError } = await adminClient
+  const { error: insertError } = await getAdminClient()
     .from('join_requests')
     .insert({ name: trimmedName, email: normalizedEmail, invite_token: token })
 

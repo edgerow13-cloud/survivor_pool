@@ -1,17 +1,17 @@
-import { adminClient } from '@/lib/supabase/admin'
+import { getAdminClient } from '@/lib/supabase/admin'
 import ApproveRejectButtons from './ApproveRejectButtons'
 import InviteLinkSection from './InviteLinkSection'
 import ReinstateButton from './ReinstateButton'
 
 export default async function PlayersPage() {
   const [{ data: joinRequests }, { data: users }, { data: inviteLinks }] = await Promise.all([
-    adminClient
+    getAdminClient()
       .from('join_requests')
       .select('*')
       .eq('status', 'pending')
       .order('created_at', { ascending: true }),
-    adminClient.from('users').select('*').order('status').order('name'),
-    adminClient
+    getAdminClient().from('users').select('*').order('status').order('name'),
+    getAdminClient()
       .from('invite_links')
       .select('*')
       .eq('is_active', true)
