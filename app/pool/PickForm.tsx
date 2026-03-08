@@ -2,44 +2,46 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { ContestantCard } from '@/components/survivor/ContestantCard'
+import { SubmitBar } from '@/components/survivor/SubmitBar'
+import { SuccessAlert } from '@/components/survivor/SuccessAlert'
 
-interface ContestantOption {
+export interface ContestantOption {
   id: string
   name: string
   is_eliminated: boolean
+  eliminated_week: number | null
   tribe: { name: string; color: string } | null
 }
 
 interface Props {
   weekId: string
+  weekNumber: number
   userId: string
   currentContestantId: string | null
   contestants: ContestantOption[]
   usedContestantIds: string[]
-  initiallyShowForm: boolean
   onPickSaved: () => void
 }
 
 export default function PickForm({
   weekId,
+  weekNumber,
   userId,
   currentContestantId,
   contestants,
   usedContestantIds,
-  initiallyShowForm,
   onPickSaved,
 }: Props) {
   const router = useRouter()
-  const [showForm, setShowForm] = useState(initiallyShowForm)
   const [selected, setSelected] = useState<string | null>(currentContestantId)
+  const [isSubmitted, setIsSubmitted] = useState(currentContestantId !== null)
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const usedSet = new Set(usedContestantIds)
-
-  const currentPick = currentContestantId
-    ? contestants.find((c) => c.id === currentContestantId)
-    : null
+  const selectedContestant = selected ? contestants.find((c) => c.id === selected) ?? null : null
 
   async function handleSubmit() {
     if (!selected) return
@@ -55,6 +57,8 @@ export default function PickForm({
         const body = await res.json() as { error?: string }
         setError(body.error ?? 'Something went wrong. Please try again.')
       } else {
+        setIsSubmitted(true)
+        setShowSuccessAlert(true)
         onPickSaved()
         router.refresh()
       }
@@ -65,101 +69,75 @@ export default function PickForm({
     }
   }
 
-  const isUnchanged = selected === currentContestantId
-  const submitDisabled = !selected || isUnchanged || loading
-
-  if (!showForm && currentPick) {
-    return (
-      <div className="rounded-lg p-4 bg-orange-50 border border-orange-200">
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div className="flex items-center gap-2">
-            {currentPick.tribe && (
-              <span
-                className="inline-block w-2.5 h-2.5 rounded-full shrink-0"
-                style={{ backgroundColor: currentPick.tribe.color }}
-              />
-            )}
-            <span className="font-medium text-gray-800">
-              You picked <strong>{currentPick.name}</strong>
-            </span>
-            <span className="text-green-600 text-sm">✓</span>
-          </div>
-          <button
-            onClick={() => setShowForm(true)}
-            className="text-sm text-orange-600 hover:underline font-medium"
-          >
-            Change pick
-          </button>
-        </div>
-      </div>
-    )
+  function handleChangePick() {
+    setIsSubmitted(false)
+    setShowSuccessAlert(false)
   }
 
   return (
-    <div>
-      {currentPick && (
-        <div className="flex items-center gap-2 mb-4 text-sm text-gray-500">
-          <span>Current pick: <strong className="text-gray-700">{currentPick.name}</strong></span>
-          <button
-            onClick={() => { setShowForm(false); setSelected(currentContestantId) }}
-            className="text-gray-400 hover:text-gray-600 text-xs underline"
-          >
-            Cancel
-          </button>
+    <>
+      {/* Success alert */}
+      {showSuccessAlert && selectedContestant && (
+        <div className="mb-6">
+          <SuccessAlert
+            contestantName={selectedContestant.name}
+            week={weekNumber}
+            onDismiss={() => setShowSuccessAlert(false)}
+          />
         </div>
       )}
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
+      {/* Error */}
+      {error && (
+        <div className="mb-4 rounded-lg p-3 bg-red-50 border border-red-200 text-red-700 text-sm">
+          {error}
+        </div>
+      )}
+
+      {/* Contestant card grid */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {contestants.map((c) => {
           const isUsed = usedSet.has(c.id) && c.id !== currentContestantId
-          const isElim = c.is_eliminated
-          const isDisabled = isUsed || isElim
-          const isSelected = selected === c.id
-
-          let cardClass =
-            'relative flex items-center gap-2 rounded-lg border px-3 py-2.5 text-sm transition-colors cursor-pointer select-none '
-
-          if (isDisabled) {
-            cardClass += 'border-gray-100 bg-gray-50 cursor-not-allowed opacity-60'
-          } else if (isSelected) {
-            cardClass += 'border-orange-400 bg-orange-50 text-orange-800'
-          } else {
-            cardClass += 'border-gray-200 bg-white hover:border-orange-300 text-gray-700'
-          }
-
           return (
-            <button
+            <ContestantCard
               key={c.id}
-              type="button"
-              disabled={isDisabled}
-              onClick={() => !isDisabled && setSelected(c.id)}
-              className={cardClass}
-            >
-              {c.tribe && (
-                <span
-                  className="inline-block w-2.5 h-2.5 rounded-full shrink-0"
-                  style={{ backgroundColor: c.tribe.color }}
-                />
-              )}
-              <span className={isElim ? 'line-through' : ''}>{c.name}</span>
-              {isUsed && !isElim && (
-                <span className="ml-auto text-xs text-gray-400 whitespace-nowrap">Used</span>
-              )}
-            </button>
+              id={c.id}
+              name={c.name}
+              tribe={c.tribe}
+              isEliminated={c.is_eliminated}
+              eliminatedWeek={c.eliminated_week}
+              isUsed={isUsed}
+              isSelected={selected === c.id}
+              isSubmitted={isSubmitted && selected === c.id}
+              onSelect={setSelected}
+            />
           )
         })}
       </div>
 
-      {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
+      {/* Desktop sticky submit bar */}
+      <div className="hidden md:block sticky bottom-0 mt-8 -mx-4 sm:-mx-6 md:-mx-8">
+        <SubmitBar
+          selectedName={selectedContestant?.name ?? null}
+          selectedTribeName={selectedContestant?.tribe?.name ?? null}
+          isSubmitted={isSubmitted}
+          isLoading={loading}
+          onSubmit={handleSubmit}
+          onChangePick={handleChangePick}
+        />
+      </div>
 
-      <button
-        type="button"
-        disabled={submitDisabled}
-        onClick={handleSubmit}
-        className="w-full py-2.5 rounded-lg bg-orange-500 text-white font-semibold text-sm hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {loading ? 'Submitting...' : 'Submit Pick'}
-      </button>
-    </div>
+      {/* Mobile fixed submit bar */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40">
+        <SubmitBar
+          selectedName={selectedContestant?.name ?? null}
+          selectedTribeName={selectedContestant?.tribe?.name ?? null}
+          isSubmitted={isSubmitted}
+          isLoading={loading}
+          onSubmit={handleSubmit}
+          onChangePick={handleChangePick}
+        />
+      </div>
+    </>
   )
 }

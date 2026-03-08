@@ -1,53 +1,71 @@
 import { getAdminClient } from '@/lib/supabase/admin'
 import WeekForm from './WeekForm'
-import WeekRow from './WeekRow'
+import CurrentWeekCard from './CurrentWeekCard'
+import WeeksTable from './WeeksTable'
+import type { Week, Contestant } from '@/types/database'
 
 export const dynamic = 'force-dynamic'
 
 export default async function WeeksPage() {
-  const [{ data: weeks }, { data: contestants }, { data: users }] = await Promise.all([
-    getAdminClient().from('weeks').select('*').order('week_number', { ascending: true }),
-    getAdminClient().from('contestants').select('*').order('name'),
-    getAdminClient()
-      .from('users')
-      .select('*')
-      .in('status', ['active', 'eliminated'])
-      .order('name'),
-  ])
+  const [{ data: weeksRaw }, { data: contestantsRaw }, { count: activePlayerCount }] =
+    await Promise.all([
+      getAdminClient().from('weeks').select('*').order('week_number', { ascending: true }),
+      getAdminClient().from('contestants').select('*').order('name'),
+      getAdminClient()
+        .from('users')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'active'),
+    ])
 
-  const contestantMap = Object.fromEntries((contestants ?? []).map((c) => [c.id, c.name]))
+  const weeks = (weeksRaw ?? []) as Week[]
+  const contestants = (contestantsRaw ?? []) as Contestant[]
+
+  // Current week = first unresolved week by week_number
+  const currentWeek = weeks.find((w) => !w.is_results_entered) ?? null
+
+  const nextWeekNumber =
+    weeks.length > 0 ? Math.max(...weeks.map((w) => w.week_number)) + 1 : 1
+
+  const totalActivePlayers = activePlayerCount ?? 0
+
+  // Fetch pick count for the current week
+  let picksSubmitted = 0
+  if (currentWeek) {
+    const { count } = await getAdminClient()
+      .from('picks')
+      .select('*', { count: 'exact', head: true })
+      .eq('week_id', currentWeek.id)
+      .not('contestant_id', 'is', null)
+    picksSubmitted = count ?? 0
+  }
+
+  // For the CurrentWeekCard elimination select: non-eliminated + the current eliminated one
+  const currentWeekContestants = contestants.filter(
+    (c) => !c.is_eliminated || c.id === currentWeek?.eliminated_contestant_id,
+  )
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <h1 className="text-2xl font-bold text-gray-900">Weeks &amp; Results</h1>
 
-      <section className="bg-white rounded-xl border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">Add Week</h2>
-        <WeekForm />
-      </section>
+      <WeekForm nextWeekNumber={nextWeekNumber} />
 
-      <section className="bg-white rounded-xl border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">All Weeks</h2>
-        {weeks && weeks.length > 0 ? (
-          <div className="space-y-3">
-            {weeks.map((week) => (
-              <WeekRow
-                key={week.id}
-                week={week}
-                contestants={contestants ?? []}
-                users={users ?? []}
-                eliminatedContestantName={
-                  week.eliminated_contestant_id
-                    ? (contestantMap[week.eliminated_contestant_id] ?? null)
-                    : null
-                }
-              />
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm text-gray-400">No weeks created yet.</p>
-        )}
-      </section>
+      {currentWeek && (
+        <CurrentWeekCard
+          week={currentWeek}
+          contestants={currentWeekContestants}
+          picksSubmitted={picksSubmitted}
+          totalActivePlayers={totalActivePlayers}
+        />
+      )}
+
+      <WeeksTable
+        weeks={weeks}
+        contestants={contestants}
+        currentWeekId={currentWeek?.id ?? null}
+        currentWeekPicksSubmitted={picksSubmitted}
+        totalActivePlayers={totalActivePlayers}
+      />
     </div>
   )
 }

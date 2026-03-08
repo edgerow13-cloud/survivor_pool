@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
+import { Button } from '@/components/ui/button'
 
 export default function ReinstateButton({ playerId }: { playerId: string }) {
   const { userId } = useAuth()
@@ -34,13 +35,15 @@ export default function ReinstateButton({ playerId }: { playerId: string }) {
 
   return (
     <div className="inline-flex items-center gap-2">
-      <button
+      <Button
+        variant="outline"
+        size="sm"
         onClick={reinstate}
         disabled={loading}
-        className="px-2 py-1 text-xs font-medium text-orange-600 hover:bg-orange-50 rounded disabled:opacity-50"
+        className="text-xs border-green-300 text-green-700 hover:bg-green-50 h-7 px-2"
       >
-        {loading ? '...' : 'Reinstate'}
-      </button>
+        {loading ? '…' : 'Reinstate'}
+      </Button>
       {error && <span className="text-xs text-red-600">{error}</span>}
     </div>
   )

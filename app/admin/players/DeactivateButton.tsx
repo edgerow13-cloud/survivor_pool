@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
+import { Button } from '@/components/ui/button'
 
 export default function DeactivateButton({ playerId }: { playerId: string }) {
   const { userId } = useAuth()
@@ -34,13 +35,15 @@ export default function DeactivateButton({ playerId }: { playerId: string }) {
 
   return (
     <div className="inline-flex items-center gap-2">
-      <button
+      <Button
+        variant="ghost"
+        size="sm"
         onClick={deactivate}
         disabled={loading}
-        className="px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded disabled:opacity-50"
+        className="text-xs text-muted-foreground hover:text-foreground h-7 px-2"
       >
-        {loading ? '...' : 'Deactivate'}
-      </button>
+        {loading ? '…' : 'Deactivate'}
+      </Button>
       {error && <span className="text-xs text-red-600">{error}</span>}
     </div>
   )

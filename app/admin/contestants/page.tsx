@@ -1,15 +1,18 @@
-import Link from 'next/link'
 import { getAdminClient } from '@/lib/supabase/admin'
-import TribeAssignmentRow from './TribeAssignmentRow'
+import ContestantsClient, { type ContestantWithTribe } from './ContestantsClient'
+import type { Tribe } from '@/types/database'
 
 export const dynamic = 'force-dynamic'
 
 export default async function ContestantsPage() {
-  const [{ data: contestants }, { data: tribes }, { data: tribeHistory }] = await Promise.all([
-    getAdminClient().from('contestants').select('*').order('name'),
-    getAdminClient().from('tribes').select('*').order('name'),
-    getAdminClient().from('contestant_tribe_history').select('*'),
-  ])
+  const [{ data: contestantsRaw }, { data: tribesRaw }, { data: tribeHistory }] =
+    await Promise.all([
+      getAdminClient().from('contestants').select('*').order('name'),
+      getAdminClient().from('tribes').select('*').order('name'),
+      getAdminClient().from('contestant_tribe_history').select('*'),
+    ])
+
+  const tribes = (tribesRaw ?? []) as Tribe[]
 
   // Find latest tribe assignment per contestant
   const latestTribeByContestant: Record<string, { tribe_id: string; week_number: number }> = {}
@@ -23,56 +26,40 @@ export default async function ContestantsPage() {
     }
   }
 
+  const tribeMap = Object.fromEntries(tribes.map((t) => [t.id, t]))
+
+  const contestants: ContestantWithTribe[] = (contestantsRaw ?? []).map((c) => {
+    const assignment = latestTribeByContestant[c.id]
+    const tribe = assignment ? (tribeMap[assignment.tribe_id] ?? null) : null
+    return {
+      id: c.id,
+      name: c.name,
+      is_eliminated: c.is_eliminated,
+      eliminated_week: c.eliminated_week,
+      tribe: tribe ? { id: tribe.id, name: tribe.name, color: tribe.color } : null,
+    }
+  })
+
+  // Compute active member names per tribe (for TribeCard display)
+  const tribeMembers: Record<string, string[]> = {}
+  for (const tribe of tribes) {
+    tribeMembers[tribe.id] = contestants
+      .filter((c) => !c.is_eliminated && c.tribe?.id === tribe.id)
+      .map((c) => c.name)
+      .sort()
+  }
+
   const maxWeek = Math.max(
     1,
-    ...Object.values(latestTribeByContestant).map((r) => r.week_number)
+    ...Object.values(latestTribeByContestant).map((r) => r.week_number),
   )
 
   return (
-    <div className="space-y-8">
-      <h1 className="text-2xl font-bold text-gray-900">Contestants</h1>
-      {(tribes ?? []).length === 0 && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm text-yellow-800">
-          No tribes defined yet.{' '}
-          <Link href="/admin/tribes" className="underline hover:text-yellow-900">
-            Create tribes first →
-          </Link>
-        </div>
-      )}
-      <section className="bg-white rounded-xl border border-gray-200 p-6 overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-left text-gray-500 text-xs border-b border-gray-200">
-              <th className="pb-2 pr-4 font-medium">Name</th>
-              <th className="pb-2 pr-4 font-medium">Current Tribe</th>
-              <th className="pb-2 pr-4 font-medium">Set Tribe Assignment</th>
-              <th className="pb-2 font-medium">Elimination</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(contestants ?? []).length === 0 ? (
-              <tr>
-                <td colSpan={4} className="py-8 text-center text-gray-400 text-sm">
-                  No contestants added yet.
-                </td>
-              </tr>
-            ) : (
-              (contestants ?? []).map((contestant) => {
-                const assignment = latestTribeByContestant[contestant.id]
-                return (
-                  <TribeAssignmentRow
-                    key={contestant.id}
-                    contestant={contestant}
-                    tribes={tribes ?? []}
-                    currentTribeId={assignment?.tribe_id ?? null}
-                    defaultWeek={maxWeek}
-                  />
-                )
-              })
-            )}
-          </tbody>
-        </table>
-      </section>
-    </div>
+    <ContestantsClient
+      contestants={contestants}
+      tribes={tribes}
+      defaultWeekNumber={maxWeek}
+      tribeMembers={tribeMembers}
+    />
   )
 }
