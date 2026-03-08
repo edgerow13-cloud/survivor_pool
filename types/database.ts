@@ -63,6 +63,14 @@ export interface Pick {
   created_at: string
 }
 
+export interface WinnerPick {
+  id: string
+  user_id: string
+  contestant_id: string
+  updated_at: string
+  created_at: string
+}
+
 export interface NewUser {
   id: string
   name: string

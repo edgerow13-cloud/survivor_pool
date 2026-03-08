@@ -11,6 +11,7 @@ interface AuthState {
   role: UserRole | null
   isLoading: boolean
   logout: () => void
+  updateName: (name: string) => void
 }
 
 const AuthContext = createContext<AuthState>({
@@ -19,6 +20,7 @@ const AuthContext = createContext<AuthState>({
   role: null,
   isLoading: true,
   logout: () => {},
+  updateName: () => {},
 })
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -48,8 +50,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.push('/login')
   }
 
+  function updateName(newName: string) {
+    sessionStorage.setItem('pool_name', newName)
+    setName(newName)
+  }
+
   return (
-    <AuthContext.Provider value={{ userId, name, role, isLoading, logout }}>
+    <AuthContext.Provider value={{ userId, name, role, isLoading, logout, updateName }}>
       {children}
     </AuthContext.Provider>
   )

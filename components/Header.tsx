@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Users } from 'lucide-react'
+import { Users, User } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 
 interface NavLink {
@@ -31,6 +31,13 @@ export function Header({ navLink }: { navLink?: NavLink }) {
             <Users className="w-4 h-4" />
             <span className="hidden sm:inline">{link.label}</span>
             <span className="sm:hidden">{link.shortLabel}</span>
+          </Link>
+          <Link
+            href="/profile"
+            className="flex items-center gap-1.5 text-sm font-medium text-[#F97316] hover:text-orange-600 transition-colors"
+          >
+            <User className="w-4 h-4" />
+            <span className="hidden sm:inline">Profile</span>
           </Link>
           <div className="flex items-center gap-3">
             <span className="text-sm font-medium text-gray-700">{name}</span>
