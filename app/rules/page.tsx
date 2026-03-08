@@ -36,7 +36,9 @@ export default function RulesPage() {
                 pre-pool; no picks were collected for those weeks.
               </Rule>
               <Rule>
-                The last player (or players) still standing at the end of the season wins.
+                The last player (or players) still standing at the end of the season wins. If all
+                remaining active players are eliminated in the same episode, the winner pick
+                tiebreaker determines the pool winner.
               </Rule>
             </div>
           </section>
@@ -109,6 +111,33 @@ export default function RulesPage() {
             </div>
           </section>
 
+          {/* Winner Pick & Tiebreaker */}
+          <section>
+            <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <span className="inline-block w-1 h-5 rounded-full bg-[#F97316]" />
+              Winner Pick &amp; Tiebreaker
+            </h2>
+            <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
+              <Rule label="Pregame prediction required">
+                Before the Episode 3 deadline, every player must submit a pregame prediction for
+                who they think will win Survivor 50. This is your &ldquo;winner pick.&rdquo;
+              </Rule>
+              <Rule label="Winner picks are public">
+                Your winner pick is visible to all players immediately upon submission — it&apos;s
+                a public commitment, not a hidden pick. You can change it freely before the
+                Episode 3 deadline. After that, it locks permanently.
+              </Rule>
+              <Rule label="Tiebreaker">
+                If all remaining active players are eliminated in the same episode, the player
+                whose winner pick castaway survived the longest in the game wins the pool.
+              </Rule>
+              <Rule label="Exact tie">
+                If two players picked the same castaway (or both castaways were eliminated the
+                same week), those players tie. There is no further tiebreaker.
+              </Rule>
+            </div>
+          </section>
+
           {/* Picks Grid Visibility */}
           <section>
             <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
@@ -163,10 +192,6 @@ export default function RulesPage() {
               <Rule>
                 The commissioner can reinstate an eliminated player if a technical error or
                 extenuating circumstance warrants it.
-              </Rule>
-              <Rule>
-                If multiple players are eliminated in the same final episode, the commissioner
-                handles any tiebreak manually.
               </Rule>
             </div>
           </section>
