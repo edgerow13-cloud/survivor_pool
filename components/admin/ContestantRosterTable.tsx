@@ -37,7 +37,6 @@ export interface ContestantForRoster {
 interface Props {
   contestants: ContestantForRoster[]
   selectedContestants: Set<string>
-  weekNumber: number
   userId: string
   onContestantToggle: (id: string) => void
 }
@@ -45,7 +44,6 @@ interface Props {
 export function ContestantRosterTable({
   contestants,
   selectedContestants,
-  weekNumber,
   userId,
   onContestantToggle,
 }: Props) {
@@ -63,33 +61,6 @@ export function ContestantRosterTable({
 
   const active = contestants.filter((c) => !c.is_eliminated)
   const eliminated = contestants.filter((c) => c.is_eliminated)
-
-  async function markEliminated(id: string) {
-    setLoadingId(id)
-    setError(null)
-    try {
-      const res = await fetch('/api/admin/update-contestant', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId,
-          contestant_id: id,
-          is_eliminated: true,
-          eliminated_week: weekNumber,
-        }),
-      })
-      if (!res.ok) {
-        const data = await res.json() as { error?: string }
-        setError(data.error ?? 'Failed')
-      } else {
-        router.refresh()
-      }
-    } catch {
-      setError('Network error')
-    } finally {
-      setLoadingId(null)
-    }
-  }
 
   async function reinstate(id: string) {
     setLoadingId(id)
@@ -238,7 +209,7 @@ export function ContestantRosterTable({
               <Camera className="w-3.5 h-3.5" />
               Photo
             </Button>
-            {isElim ? (
+            {isElim && (
               <Button
                 variant="outline"
                 size="sm"
@@ -247,16 +218,6 @@ export function ContestantRosterTable({
                 onClick={() => reinstate(c.id)}
               >
                 {loadingId === c.id ? '…' : 'Reinstate'}
-              </Button>
-            ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={loadingId === c.id}
-                className="text-[#DC2626] border-[#DC2626] hover:bg-[#DC2626]/10"
-                onClick={() => markEliminated(c.id)}
-              >
-                {loadingId === c.id ? '…' : 'Mark Eliminated'}
               </Button>
             )}
           </div>

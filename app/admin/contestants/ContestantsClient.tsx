@@ -122,7 +122,6 @@ export default function ContestantsClient({
         <ContestantRosterTable
           contestants={contestants}
           selectedContestants={selectedContestants}
-          weekNumber={weekNumber}
           userId={userId}
           onContestantToggle={handleContestantToggle}
         />

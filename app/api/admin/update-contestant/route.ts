@@ -30,5 +30,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
+  // When reinstating a contestant, remove their week_eliminations rows so
+  // the Weeks page becomes the single source of truth for eliminations.
+  if (is_eliminated === false) {
+    const { error: weError } = await getAdminClient()
+      .from('week_eliminations')
+      .delete()
+      .eq('contestant_id', contestant_id)
+    if (weError) {
+      return NextResponse.json({ error: weError.message }, { status: 500 })
+    }
+  }
+
   return NextResponse.json({ ok: true })
 }
