@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { getAdminClient } from '@/lib/supabase/admin'
 
 export async function POST(request: NextRequest) {
-  const supabase = await createClient()
+  const body = await request.json() as { userId?: string; week_id?: string; contestant_id?: string }
+  const { userId, week_id, contestant_id } = body
 
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
+  if (!userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { data: me, error: userError } = await supabase
+  const { data: me, error: userError } = await getAdminClient()
     .from('users')
     .select('*')
-    .eq('id', user.id)
+    .eq('id', userId)
     .single()
 
   if (userError || !me) {
@@ -23,15 +23,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'You are not eligible to pick' }, { status: 403 })
   }
 
-  const body = await request.json() as { week_id?: string; contestant_id?: string }
-  const { week_id, contestant_id } = body
-
   if (!week_id || !contestant_id) {
     return NextResponse.json({ error: 'Missing week_id or contestant_id' }, { status: 400 })
   }
 
-  // Load the week
-  const { data: week, error: weekError } = await supabase
+  const { data: week, error: weekError } = await getAdminClient()
     .from('weeks')
     .select('*')
     .eq('id', week_id)
@@ -48,8 +44,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Picks are locked for this week' }, { status: 403 })
   }
 
-  // Validate contestant exists and is not eliminated
-  const { data: contestant, error: contestantError } = await supabase
+  const { data: contestant, error: contestantError } = await getAdminClient()
     .from('contestants')
     .select('id, is_eliminated')
     .eq('id', contestant_id)
@@ -63,11 +58,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'This contestant has already been eliminated' }, { status: 400 })
   }
 
-  // No-repeat check: has this user already picked this contestant in a different week?
-  const { data: priorPick } = await supabase
+  // No-repeat check
+  const { data: priorPick } = await getAdminClient()
     .from('picks')
     .select('id')
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
     .eq('contestant_id', contestant_id)
     .neq('week_id', week_id)
     .limit(1)
@@ -77,12 +72,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'You have already picked this contestant in a prior week' }, { status: 400 })
   }
 
-  // Upsert the pick
-  const { error: upsertError } = await supabase
+  const { error: upsertError } = await getAdminClient()
     .from('picks')
     .upsert(
       {
-        user_id: user.id,
+        user_id: userId,
         week_id,
         contestant_id,
         outcome: null,

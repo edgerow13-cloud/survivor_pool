@@ -2,6 +2,8 @@ import Link from 'next/link'
 import { getAdminClient } from '@/lib/supabase/admin'
 import TribeAssignmentRow from './TribeAssignmentRow'
 
+export const dynamic = 'force-dynamic'
+
 export default async function ContestantsPage() {
   const [{ data: contestants }, { data: tribes }, { data: tribeHistory }] = await Promise.all([
     getAdminClient().from('contestants').select('*').order('name'),

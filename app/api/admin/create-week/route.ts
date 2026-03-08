@@ -3,10 +3,11 @@ import { requireCommissioner } from '@/lib/require-commissioner'
 import { getAdminClient } from '@/lib/supabase/admin'
 
 export async function POST(request: NextRequest) {
-  const auth = await requireCommissioner(request)
+  const body = await request.json() as { userId?: string; week_number?: number; episode_date?: string }
+  const auth = await requireCommissioner(body.userId)
   if (auth instanceof NextResponse) return auth
 
-  const { week_number, episode_date } = await request.json()
+  const { week_number, episode_date } = body
 
   if (!week_number || week_number < 1) {
     return NextResponse.json({ error: 'Invalid week_number' }, { status: 400 })

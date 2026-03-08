@@ -1,0 +1,55 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { getAdminClient } from '@/lib/supabase/admin'
+
+export async function POST(request: NextRequest) {
+  const body = await request.json() as { userId?: string }
+  const { userId } = body
+
+  if (!userId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const { data: me } = await getAdminClient()
+    .from('users')
+    .select('id, status, role')
+    .eq('id', userId)
+    .single()
+
+  if (!me || (me.status !== 'active' && me.status !== 'eliminated' && me.role !== 'commissioner')) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const [
+    { data: weeks },
+    { data: allUsers },
+    { data: allPicks },
+    { data: contestants },
+    { data: tribeHistory },
+    { data: tribes },
+  ] = await Promise.all([
+    getAdminClient().from('weeks').select('*').order('week_number', { ascending: true }),
+    getAdminClient().from('users').select('*').order('name'),
+    getAdminClient().from('picks').select('*'),
+    getAdminClient().from('contestants').select('*'),
+    getAdminClient().from('contestant_tribe_history').select('*'),
+    getAdminClient().from('tribes').select('*'),
+  ])
+
+  // Filter picks: for weeks not yet resolved, only return the requesting user's own pick
+  const resolvedWeekIds = new Set(
+    (weeks ?? []).filter((w) => w.is_results_entered).map((w) => w.id)
+  )
+  const filteredPicks = (allPicks ?? []).filter(
+    (p) => resolvedWeekIds.has(p.week_id) || p.user_id === userId
+  )
+
+  return NextResponse.json({
+    weeks: weeks ?? [],
+    allUsers: allUsers ?? [],
+    allPicks: filteredPicks,
+    contestants: contestants ?? [],
+    tribeHistory: tribeHistory ?? [],
+    tribes: tribes ?? [],
+    currentUserId: userId,
+  })
+}

@@ -3,18 +3,20 @@ import { requireCommissioner } from '@/lib/require-commissioner'
 import { getAdminClient } from '@/lib/supabase/admin'
 
 export async function POST(request: NextRequest) {
-  const auth = await requireCommissioner(request)
+  const body = await request.json() as { userId?: string; playerId?: string }
+  const auth = await requireCommissioner(body.userId)
   if (auth instanceof NextResponse) return auth
 
-  const { join_request_id } = await request.json()
-  if (!join_request_id) {
-    return NextResponse.json({ error: 'Missing join_request_id' }, { status: 400 })
+  const { playerId } = body
+
+  if (!playerId) {
+    return NextResponse.json({ error: 'Missing playerId' }, { status: 400 })
   }
 
   const { error } = await getAdminClient()
-    .from('join_requests')
-    .update({ status: 'rejected' })
-    .eq('id', join_request_id)
+    .from('users')
+    .update({ status: 'inactive' })
+    .eq('id', playerId)
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })

@@ -1,7 +1,20 @@
-import { redirect } from 'next/navigation'
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
+import { useAuth } from '@/lib/auth-context'
 import type { Contestant, Tribe, ContestantTribeHistory, Week, Pick, User } from '@/types/database'
+
+interface PicksHistoryData {
+  weeks: Week[]
+  allUsers: User[]
+  allPicks: Pick[]
+  contestants: Contestant[]
+  tribeHistory: ContestantTribeHistory[]
+  tribes: Tribe[]
+  currentUserId: string
+}
 
 function formatShortDate(isoString: string) {
   return new Date(isoString).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
@@ -30,64 +43,71 @@ function getTribeAtWeek(
   return result ? (tribeMap[result.tribe_id] ?? null) : null
 }
 
-export default async function PicksHistoryPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+function Spinner() {
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
+    </div>
+  )
+}
 
-  const { data: meData } = await supabase.from('users').select('*').eq('id', user.id).single()
-  if (!meData) redirect('/login')
-  const me = meData as User
+export default function PicksHistoryPage() {
+  const { userId, isLoading } = useAuth()
+  const router = useRouter()
+  const [data, setData] = useState<PicksHistoryData | null>(null)
+  const [fetchError, setFetchError] = useState<string | null>(null)
+  const [fetching, setFetching] = useState(false)
 
-  if (me.status === 'pending_approval') {
+  useEffect(() => {
+    if (isLoading) return
+    if (!userId) {
+      router.push('/login')
+      return
+    }
+    setFetching(true)
+    fetch('/api/pool/picks-history', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId }),
+    })
+      .then((res) => res.json() as Promise<PicksHistoryData & { error?: string }>)
+      .then((json) => {
+        if (json.error) {
+          setFetchError(json.error)
+        } else {
+          setData(json)
+        }
+      })
+      .catch(() => setFetchError('Failed to load pick history.'))
+      .finally(() => setFetching(false))
+  }, [isLoading, userId, router])
+
+  if (isLoading || fetching) return <Spinner />
+
+  if (fetchError) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-xl shadow-md w-full max-w-sm p-8 text-center">
-          <h1 className="text-xl font-bold text-gray-800 mb-2">Request Pending</h1>
-          <p className="text-gray-500 text-sm">
-            Your request to join the pool is awaiting commissioner approval. You&apos;ll receive an email once approved.
-          </p>
+          <h1 className="text-xl font-bold text-gray-800 mb-2">Error</h1>
+          <p className="text-gray-500 text-sm">{fetchError}</p>
         </div>
       </div>
     )
   }
 
-  const [
-    { data: weeksData },
-    { data: allUsersData },
-    { data: allPicksData },
-    { data: contestantsData },
-    { data: tribeHistoryData },
-    { data: tribesData },
-  ] = await Promise.all([
-    supabase.from('weeks').select('*').order('week_number', { ascending: true }),
-    supabase.from('users').select('*').order('name'),
-    supabase.from('picks').select('*'),
-    supabase.from('contestants').select('*'),
-    supabase.from('contestant_tribe_history').select('*'),
-    supabase.from('tribes').select('*'),
-  ])
+  if (!data) return null
 
-  const weeks = (weeksData ?? []) as Week[]
-  const allUsers = (allUsersData ?? []) as User[]
-  const allPicks = (allPicksData ?? []) as Pick[]
-  const contestants = (contestantsData ?? []) as Contestant[]
-  const tribeHistory = (tribeHistoryData ?? []) as ContestantTribeHistory[]
-  const tribes = (tribesData ?? []) as Tribe[]
+  const { weeks, allUsers, allPicks, contestants, tribeHistory, tribes, currentUserId } = data
 
-  // Build lookup maps
   const tribeMap: Record<string, Tribe> = Object.fromEntries(tribes.map((t) => [t.id, t]))
   const contestantMap: Record<string, Contestant> = Object.fromEntries(contestants.map((c) => [c.id, c]))
-  const weekMap: Record<string, Week> = Object.fromEntries(weeks.map((w) => [w.id, w]))
 
-  // picks indexed by [user_id][week_id]
   const pickMap: Record<string, Record<string, Pick>> = {}
   for (const pick of allPicks) {
     if (!pickMap[pick.user_id]) pickMap[pick.user_id] = {}
     pickMap[pick.user_id][pick.week_id] = pick
   }
 
-  // tribe history grouped by contestant, sorted ASC so last match <= weekNumber wins
   const historyByContestant: Record<string, ContestantTribeHistory[]> = {}
   for (const h of tribeHistory) {
     if (!historyByContestant[h.contestant_id]) historyByContestant[h.contestant_id] = []
@@ -97,9 +117,8 @@ export default async function PicksHistoryPage() {
     arr.sort((a, b) => a.week_number - b.week_number)
   }
 
-  // Sort users: active first (alpha), then eliminated (by eliminated_week asc, then name)
   const sortedUsers = [...allUsers]
-    .filter((u) => u.status !== 'pending_approval')
+    .filter((u) => u.status !== 'pending_approval' && u.status !== 'inactive')
     .sort((a, b) => {
       if (a.status === 'eliminated' && b.status !== 'eliminated') return 1
       if (a.status !== 'eliminated' && b.status === 'eliminated') return -1
@@ -110,17 +129,12 @@ export default async function PicksHistoryPage() {
       return a.name.localeCompare(b.name)
     })
 
-  // Check if any currently-open week exists (to show note)
   const hasUnresolvedWeek = weeks.some((w) => !w.is_results_entered)
-
-  // suppress unused variable warning — weekMap used below in header
-  void weekMap
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
       <div className="max-w-full mx-auto space-y-4">
 
-        {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-orange-500">Pick History</h1>
           <Link href="/pool" className="text-sm text-orange-500 hover:underline">
@@ -128,7 +142,6 @@ export default async function PicksHistoryPage() {
           </Link>
         </div>
 
-        {/* Legend */}
         <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500">
           <span className="flex items-center gap-1.5">
             <span className="inline-block w-3 h-3 rounded bg-green-100 border border-green-300" />
@@ -148,7 +161,6 @@ export default async function PicksHistoryPage() {
           </span>
         </div>
 
-        {/* Grid */}
         {weeks.length === 0 ? (
           <div className="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-400">
             No weeks scheduled yet.
@@ -206,10 +218,9 @@ export default async function PicksHistoryPage() {
                     </td>
                     {weeks.map((week) => {
                       const pick = pickMap[u.id]?.[week.id]
-                      const isOwnRow = u.id === me.id
+                      const isOwnRow = u.id === currentUserId
 
                       if (!pick) {
-                        // Not returned by RLS — week not yet revealed for this user
                         return (
                           <td key={week.id} className="py-2 px-2 text-center text-gray-300">
                             —
@@ -226,7 +237,6 @@ export default async function PicksHistoryPage() {
                         : null
 
                       if (outcome === null) {
-                        // Own pick, week not yet resolved
                         return (
                           <td key={week.id} className="py-2 px-2">
                             <div className="flex items-center gap-0.5 min-w-0">
@@ -242,7 +252,6 @@ export default async function PicksHistoryPage() {
                         )
                       }
 
-                      // Resolved pick
                       const bgClass =
                         outcome === 'safe'
                           ? 'bg-green-50'
@@ -278,7 +287,6 @@ export default async function PicksHistoryPage() {
           </div>
         )}
 
-        {/* Note for unresolved weeks */}
         {hasUnresolvedWeek && (
           <p className="text-xs text-gray-400 text-center">
             Current week picks are hidden until results are entered.

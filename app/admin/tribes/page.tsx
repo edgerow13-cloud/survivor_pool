@@ -1,6 +1,8 @@
 import { getAdminClient } from '@/lib/supabase/admin'
 import TribeForm from './TribeForm'
 
+export const dynamic = 'force-dynamic'
+
 export default async function TribesPage() {
   const { data: tribes } = await getAdminClient()
     .from('tribes')

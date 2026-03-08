@@ -3,10 +3,11 @@ import { requireCommissioner } from '@/lib/require-commissioner'
 import { getAdminClient } from '@/lib/supabase/admin'
 
 export async function POST(request: NextRequest) {
-  const auth = await requireCommissioner(request)
+  const body = await request.json() as { userId?: string; week_id?: string; eliminated_contestant_id?: string | null }
+  const auth = await requireCommissioner(body.userId)
   if (auth instanceof NextResponse) return auth
 
-  const { week_id, eliminated_contestant_id } = await request.json()
+  const { week_id, eliminated_contestant_id } = body
   if (!week_id) {
     return NextResponse.json({ error: 'Missing week_id' }, { status: 400 })
   }
@@ -63,7 +64,6 @@ export async function POST(request: NextRequest) {
   const pickedUserIds = new Set((picks ?? []).map((p: { user_id: string }) => p.user_id))
   const usersToEliminate: string[] = []
 
-  // Determine outcome for each existing pick
   const eliminatedPicks: string[] = []
   const safePicks: string[] = []
   const noPickIds: string[] = []
@@ -80,7 +80,6 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // Build no_pick inserts for active users who have no pick row at all
   const newNoPicks: Array<{
     user_id: string
     week_id: string
@@ -101,7 +100,6 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // Apply outcome updates in parallel
   const outcomeResults = await Promise.all([
     eliminatedPicks.length > 0
       ? getAdminClient().from('picks').update({ outcome: 'eliminated' }).in('id', eliminatedPicks)
@@ -121,7 +119,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: outcomeError.message }, { status: 500 })
   }
 
-  // Eliminate users
   if (usersToEliminate.length > 0) {
     const { error: eliminateError } = await getAdminClient()
       .from('users')

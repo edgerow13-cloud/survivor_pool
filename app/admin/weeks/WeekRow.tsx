@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/lib/auth-context'
 import type { Week, Contestant, User } from '@/types/database'
 
 interface Props {
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export default function WeekRow({ week, contestants, users, eliminatedContestantName }: Props) {
+  const { userId } = useAuth()
   const router = useRouter()
   const [loading, setLoading] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -28,10 +30,10 @@ export default function WeekRow({ week, contestants, users, eliminatedContestant
       const res = await fetch('/api/admin/update-week', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ week_id: week.id, is_locked: !week.is_locked }),
+        body: JSON.stringify({ userId, week_id: week.id, is_locked: !week.is_locked }),
       })
       if (!res.ok) {
-        const data = await res.json()
+        const data = await res.json() as { error?: string }
         setError(data.error ?? 'Failed')
       } else {
         router.refresh()
@@ -52,12 +54,13 @@ export default function WeekRow({ week, contestants, users, eliminatedContestant
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          userId,
           week_id: week.id,
           eliminated_contestant_id: selectedContestant || null,
         }),
       })
       if (!res.ok) {
-        const data = await res.json()
+        const data = await res.json() as { error?: string }
         setError(data.error ?? 'Failed')
       } else {
         setShowResults(false)
@@ -79,13 +82,14 @@ export default function WeekRow({ week, contestants, users, eliminatedContestant
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          userId,
           user_id: overrideUser,
           week_id: week.id,
           contestant_id: overrideContestant || null,
         }),
       })
       if (!res.ok) {
-        const data = await res.json()
+        const data = await res.json() as { error?: string }
         setError(data.error ?? 'Failed')
       } else {
         setOverrideUser('')
@@ -100,12 +104,10 @@ export default function WeekRow({ week, contestants, users, eliminatedContestant
     }
   }
 
-  // For results entry: show non-eliminated contestants + already-set one
   const resultContestants = contestants.filter(
     (c) => !c.is_eliminated || c.id === week.eliminated_contestant_id
   )
 
-  // For pick override: show only non-eliminated contestants
   const pickContestants = contestants.filter((c) => !c.is_eliminated)
 
   return (

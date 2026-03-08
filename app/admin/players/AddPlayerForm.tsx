@@ -4,11 +4,11 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 
-export default function WeekForm() {
+export default function AddPlayerForm() {
   const { userId } = useAuth()
   const router = useRouter()
-  const [weekNumber, setWeekNumber] = useState('')
-  const [episodeDate, setEpisodeDate] = useState('')
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -17,17 +17,17 @@ export default function WeekForm() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch('/api/admin/create-week', {
+      const res = await fetch('/api/admin/players', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, week_number: Number(weekNumber), episode_date: new Date(episodeDate).toISOString() }),
+        body: JSON.stringify({ userId, name, email }),
       })
       if (!res.ok) {
         const data = await res.json() as { error?: string }
         setError(data.error ?? 'Failed')
       } else {
-        setWeekNumber('')
-        setEpisodeDate('')
+        setName('')
+        setEmail('')
         router.refresh()
       }
     } catch {
@@ -40,23 +40,24 @@ export default function WeekForm() {
   return (
     <form onSubmit={submit} className="flex items-end gap-3 flex-wrap">
       <div>
-        <label className="block text-xs text-gray-500 mb-1">Week #</label>
+        <label className="block text-xs text-gray-500 mb-1">Name</label>
         <input
-          type="number"
-          min="1"
-          value={weekNumber}
-          onChange={(e) => setWeekNumber(e.target.value)}
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
           required
-          className="w-24 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+          placeholder="Player name"
+          className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
         />
       </div>
       <div>
-        <label className="block text-xs text-gray-500 mb-1">Episode Date &amp; Time (your local time)</label>
+        <label className="block text-xs text-gray-500 mb-1">Email</label>
         <input
-          type="datetime-local"
-          value={episodeDate}
-          onChange={(e) => setEpisodeDate(e.target.value)}
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           required
+          placeholder="player@example.com"
           className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
         />
       </div>
@@ -65,7 +66,7 @@ export default function WeekForm() {
         disabled={loading}
         className="px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 disabled:opacity-50"
       >
-        {loading ? '...' : 'Add Week'}
+        {loading ? '...' : 'Add Player'}
       </button>
       {error && <span className="text-sm text-red-600">{error}</span>}
     </form>

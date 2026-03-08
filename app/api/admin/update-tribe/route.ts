@@ -3,10 +3,11 @@ import { requireCommissioner } from '@/lib/require-commissioner'
 import { getAdminClient } from '@/lib/supabase/admin'
 
 export async function POST(request: NextRequest) {
-  const auth = await requireCommissioner(request)
+  const body = await request.json() as { userId?: string; tribe_id?: string; name?: string; color?: string; is_merged?: boolean }
+  const auth = await requireCommissioner(body.userId)
   if (auth instanceof NextResponse) return auth
 
-  const { tribe_id, name, color, is_merged } = await request.json()
+  const { tribe_id, name, color, is_merged } = body
   if (!tribe_id) {
     return NextResponse.json({ error: 'Missing tribe_id' }, { status: 400 })
   }

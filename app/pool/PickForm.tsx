@@ -12,18 +12,22 @@ interface ContestantOption {
 
 interface Props {
   weekId: string
+  userId: string
   currentContestantId: string | null
   contestants: ContestantOption[]
   usedContestantIds: string[]
   initiallyShowForm: boolean
+  onPickSaved: () => void
 }
 
 export default function PickForm({
   weekId,
+  userId,
   currentContestantId,
   contestants,
   usedContestantIds,
   initiallyShowForm,
+  onPickSaved,
 }: Props) {
   const router = useRouter()
   const [showForm, setShowForm] = useState(initiallyShowForm)
@@ -33,7 +37,6 @@ export default function PickForm({
 
   const usedSet = new Set(usedContestantIds)
 
-  // Find the currently picked contestant name for the "You picked X" display
   const currentPick = currentContestantId
     ? contestants.find((c) => c.id === currentContestantId)
     : null
@@ -46,12 +49,13 @@ export default function PickForm({
       const res = await fetch('/api/picks/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ week_id: weekId, contestant_id: selected }),
+        body: JSON.stringify({ userId, week_id: weekId, contestant_id: selected }),
       })
       if (!res.ok) {
-        const body = await res.json()
+        const body = await res.json() as { error?: string }
         setError(body.error ?? 'Something went wrong. Please try again.')
       } else {
+        onPickSaved()
         router.refresh()
       }
     } catch {

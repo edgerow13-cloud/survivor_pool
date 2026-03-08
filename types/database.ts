@@ -1,7 +1,6 @@
 export type UserRole = 'commissioner' | 'player'
-export type UserStatus = 'active' | 'eliminated' | 'pending_approval'
+export type UserStatus = 'active' | 'eliminated' | 'pending_approval' | 'inactive'
 export type PickOutcome = 'safe' | 'eliminated' | 'no_pick'
-export type JoinRequestStatus = 'pending' | 'approved' | 'rejected'
 
 export interface User {
   id: string
@@ -55,30 +54,6 @@ export interface Pick {
   outcome: PickOutcome | null
   is_commissioner_override: boolean
   created_at: string
-}
-
-export interface InviteLink {
-  id: string
-  token: string
-  created_by: string
-  is_active: boolean
-  created_at: string
-}
-
-export interface JoinRequest {
-  id: string
-  name: string
-  email: string
-  invite_token: string
-  status: JoinRequestStatus
-  created_at: string
-}
-
-// Insert helper types
-export interface NewJoinRequest {
-  name: string
-  email: string
-  invite_token: string
 }
 
 export interface NewUser {

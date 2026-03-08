@@ -1,11 +1,11 @@
 # Survivor 50 Pool App — Project Context
 
 ## Project Overview
-A private, invite-only web app for running a Survivor-style elimination pool
-based on Survivor Season 50. Each week, active pool participants pick one
-Survivor contestant. If that contestant is voted off (or otherwise leaves)
-that episode, the pool participant is eliminated. Picks are one-and-done:
-you cannot pick the same contestant twice across the season.
+A private web app for running a Survivor-style elimination pool based on
+Survivor Season 50. Each week, active pool participants pick one Survivor
+contestant. If that contestant is voted off (or otherwise leaves) that
+episode, the pool participant is eliminated. Picks are one-and-done: you
+cannot pick the same contestant twice across the season.
 
 Survivor 50 premiered February 25, 2026 with a 24-person all-returnee cast
 across 3 tribes (Cila, Kalo, Vatu). Episodes 1 and 2 have already aired.
@@ -24,7 +24,7 @@ contestant must be tracked week by week.
 ## Tech Stack
 - **Frontend:** Next.js (App Router) + Tailwind CSS
 - **Backend:** Next.js API routes (serverless)
-- **Database & Auth:** Supabase (Postgres + Supabase Auth)
+- **Database:** Supabase (Postgres only — Supabase Auth is NOT used)
 - **Hosting:** Vercel
 - **Language:** TypeScript throughout
 
@@ -42,17 +42,17 @@ contestant must be tracked week by week.
 ## Core Data Models
 
 ### `users`
-Pool participants.
+Pool participants. Added directly by the commissioner — no self-signup.
 - `id` (uuid, PK)
-- `name` (text) — display name entered at join
-- `email` (text, unique) — from Supabase Auth
+- `name` (text) — display name set by commissioner when adding the player
+- `email` (text, unique) — used for identity lookup at login
 - `role` (enum: `commissioner`, `player`)
-- `status` (enum: `active`, `eliminated`, `pending_approval`)
+- `status` (enum: `active`, `eliminated`)
 - `eliminated_week` (int, nullable) — which week they were eliminated
 - `created_at`
 
 ### `contestants`
-Survivor 50 cast. 23 total. Tribe info is NOT stored here — it lives in
+Survivor 50 cast. 24 total. Tribe info is NOT stored here — it lives in
 `contestant_tribe_history` because tribes change during the season.
 - `id` (uuid, PK)
 - `name` (text)
@@ -62,9 +62,9 @@ Survivor 50 cast. 23 total. Tribe info is NOT stored here — it lives in
 
 ### `tribes`
 Master list of all tribes that exist or have existed this season.
-Commissioner creates/edits these via `/admin/contestants`.
+Commissioner creates/edits these via `/admin/tribes`.
 - `id` (uuid, PK)
-- `name` (text) — e.g. "Bikal", "Gota", "merged"
+- `name` (text) — e.g. "Cila", "Kalo", "merged"
 - `color` (text) — hex color code for UI indicator, e.g. "#F97316"
 - `is_merged` (boolean, default false) — true for the merged tribe
 - `created_at`
@@ -114,22 +114,6 @@ One row per user per week.
 - `created_at`
 - UNIQUE constraint on (user_id, week_id)
 
-### `invite_links`
-- `id` (uuid, PK)
-- `token` (text, unique) — random URL-safe string
-- `created_by` (uuid, FK → users) — must be commissioner
-- `is_active` (boolean, default true)
-- `created_at`
-
-### `join_requests`
-Users who used an invite link but are awaiting commissioner approval.
-- `id` (uuid, PK)
-- `name` (text)
-- `email` (text)
-- `invite_token` (text)
-- `status` (enum: `pending`, `approved`, `rejected`)
-- `created_at`
-
 ---
 
 ## Key Business Rules
@@ -151,8 +135,7 @@ Users who used an invite link but are awaiting commissioner approval.
 
 ## Commissioner Capabilities
 The commissioner has a dedicated admin dashboard (`/admin`) with the ability to:
-- Create and revoke invite links
-- View and approve/reject join requests
+- Add, edit, or deactivate players (name + email)
 - Add/edit/remove weeks (set episode dates)
 - Lock/unlock a week manually (in addition to auto-lock at deadline)
 - Enter or update the eliminated contestant for any week
@@ -170,14 +153,13 @@ The commissioner has a dedicated admin dashboard (`/admin`) with the ability to:
 
 | Route | Access | Description |
 |---|---|---|
-| `/` | Public | Landing page with join/login CTA |
-| `/join/[token]` | Public | Invite link landing; collect name + email, submit join request |
-| `/login` | Public | Supabase Auth login |
+| `/` | Public | Landing page with login CTA |
+| `/login` | Public | Email lookup login page |
 | `/pool` | Authenticated | Main view: current week pick submission + picks grid |
 | `/pool/picks` | Authenticated | Full picks history grid (all weeks × all players) |
 | `/admin` | Commissioner only | Admin dashboard |
 | `/admin/weeks` | Commissioner only | Manage weeks and enter results |
-| `/admin/players` | Commissioner only | Manage players, approvals, overrides |
+| `/admin/players` | Commissioner only | Add/edit players and manage overrides |
 | `/admin/contestants` | Commissioner only | Manage contestant data and tribe assignments |
 | `/admin/tribes` | Commissioner only | Manage tribes (create, rename, set colors) |
 
@@ -200,35 +182,37 @@ The commissioner has a dedicated admin dashboard (`/admin`) with the ability to:
 
 ## Auth & Access Rules
 
-### Login Method: Magic Link (passwordless)
-- No passwords. Users enter their email and receive a one-time login link.
-- Supabase Auth sends the magic link email automatically.
-- On click, the user is authenticated and redirected to the app.
-- Supabase requires an email provider for magic links:
-  - Free default: Supabase's built-in email (limited to 2 emails/day — fine for dev/testing only)
-  - Production: connect a free [Resend.com](https://resend.com) account (Supabase has a built-in Resend integration). Required before launch.
-- The login page (`/login`) should be a single email input field with a
-  "Send me a login link" button. After submission, show a confirmation:
-  "Check your email for a login link."
+### Login Method: Email Lookup (No Password, No Session)
+- No passwords, no magic links, no OAuth, no Supabase Auth.
+- User visits `/login` and enters their email address.
+- The client POSTs to `/api/auth/login`.
+- Server checks the `users` table for a row where `email` matches AND `status` is `active` OR `eliminated` (eliminated users can still view the pool).
+- If not found: return an error — *"We don't recognize that email address. Contact Eddie to get access."*
+- If found: return `{ userId, name, role }` and store in `sessionStorage`.
+- No cookies, no JWT, no persistent session. Users re-enter their email each visit or when they open a new browser tab.
+- `sessionStorage` naturally clears when the browser tab is closed — this is intentional.
 
-### Join Flow (new player)
-1. Commissioner generates an invite link from `/admin` — a unique token URL
-2. Commissioner shares the link however they want (text, group chat, etc.)
-3. New user visits `/join/[token]`, enters their name and email
-4. A `join_requests` row is created with status `pending`
-5. User sees: "Your request has been submitted. You'll get an email when you're approved."
-6. Commissioner approves in `/admin/players`
-7. On approval: user's `status` is set to `active`, a Supabase Auth account is
-   created (or linked if they already have one), and the user receives a magic
-   link email to log in for the first time
-8. User clicks link → lands on `/pool`
+### Player Management (Commissioner-only)
+- There is no self-signup or invite link flow.
+- The commissioner adds players directly via `/admin/players` by entering their name and email.
+- Players are immediately set to `status = 'active'` when added.
+- The commissioner notifies players out-of-band (text, group chat, etc.) that they can log in at pool.eddiegerow.com.
+- To remove access, the commissioner sets a player's status to `inactive` (do not delete rows).
 
 ### Access Rules
-- `pending_approval` users who try to access `/pool` see a "waiting for approval" screen
-- `eliminated` users can view `/pool` and `/pool/picks` but the pick submission UI is hidden
-- Commissioner is set manually: after initial deployment, set your own user's `role` to `commissioner` directly in the Supabase dashboard (one-time setup)
-- All pick submission and result entry must be validated server-side via API routes — never trust client-only state
-- Supabase Row Level Security (RLS) policies enforce that users cannot read other players' picks before the week is locked, even via direct API calls
+- Any user not found in `sessionStorage` who tries to access a protected route is redirected to `/login`.
+- `eliminated` users can view `/pool` and `/pool/picks` but the pick submission UI is hidden.
+- Users with `role !== 'commissioner'` who try to access `/admin/*` are redirected to `/pool`.
+- Commissioner identity is set manually: set your own user's `role` to `commissioner` directly in the Supabase dashboard (one-time setup).
+- All pick submission and result entry must be validated server-side via API routes — never trust client-only state. The `userId` from `sessionStorage` must be passed in request bodies and validated server-side against the `users` table.
+- Supabase Row Level Security (RLS) policies enforce that users cannot read other players' picks before the week is locked, even via direct API calls.
+
+### Auth Context
+A React context (`/lib/auth-context.tsx`) wraps the app and provides:
+- `{ userId, name, role, isLoading, logout }` to all components
+- Reads from `sessionStorage` on mount
+- `logout()` clears `sessionStorage` and redirects to `/login`
+- All protected pages read from this context and redirect to `/login` if `userId` is null
 
 ---
 
@@ -261,7 +245,7 @@ npm run lint       # ESLint
 - **Season:** Survivor 50 — "In the Hands of the Fans"
 - **Premiere:** February 25, 2026
 - **Pool starts:** Episode 3 (airs March 11, 2026)
-- **Total cast:** 24 contestants (NOTE: update the overview section count from 23 → 24)
+- **Total cast:** 24 contestants
 - **Starting tribes:** 3 tribes of 8
 
 ### Step 1 — Seed `tribes` table (starting tribes)
@@ -347,26 +331,24 @@ Tribe assignments will need to be updated when swaps or the merge occur.
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=   # Server-side only, never exposed to client
-NEXT_PUBLIC_APP_URL=         # e.g. https://your-app.vercel.app
+NEXT_PUBLIC_APP_URL=         # e.g. https://pool.eddiegerow.com
 ```
 
-### Email Setup (Required for Magic Links in Production)
-Supabase's built-in email sender is limited to 2 emails/day — only usable
-for local development. Before inviting real users:
-1. Create a free account at resend.com
-2. In Supabase dashboard → Authentication → SMTP Settings → connect Resend
-3. No additional env vars needed — this is configured in the Supabase dashboard directly
+No email provider is required. No Supabase Auth configuration is needed.
 
 ---
 
 ## What NOT To Do
+- Do NOT use Supabase Auth (`supabase.auth.*`) anywhere in the codebase
 - Do NOT enforce pick deadlines client-side only — always validate on the server
 - Do NOT expose other users' picks before the week is locked
 - Do NOT allow a user to pick a contestant they've already picked in a prior week
-- Do NOT allow picks from eliminated or pending users
+- Do NOT allow picks from eliminated users (they can view but not pick)
 - Do NOT use class components
 - Do NOT use `.then()` promise chains
 - Do NOT hardcode contestant names or tribe names in application logic
 - Do NOT store a contestant's "current tribe" as a single column on the `contestants` table — tribe is always resolved via `contestant_tribe_history`
 - Do NOT display a contestant's current tribe in historical week cells — always look up the tribe they were in during that specific week
 - Do NOT give the `SUPABASE_SERVICE_ROLE_KEY` to the client bundle
+- Do NOT use `localStorage` for session data — use `sessionStorage` so sessions clear when the browser is closed
+- Do NOT create invite links or join request flows — player management is commissioner-only via `/admin/players`

@@ -1,48 +1,49 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
 
 export default function LoginForm() {
+  const router = useRouter()
   const [email, setEmail] = useState('')
-  const [status, setStatus] = useState<'idle' | 'loading' | 'sent' | 'error'>('idle')
-  const [errorMessage, setErrorMessage] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setStatus('loading')
-    setErrorMessage('')
+    setLoading(true)
+    setError(null)
 
-    const supabase = createClient()
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
-      },
-    })
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
 
-    if (error) {
-      setErrorMessage(error.message)
-      setStatus('error')
-    } else {
-      setStatus('sent')
+      const data = await res.json() as { userId?: string; name?: string; role?: string; error?: string }
+
+      if (!res.ok) {
+        setError(data.error ?? 'Something went wrong. Please try again.')
+        return
+      }
+
+      sessionStorage.setItem('pool_userId', data.userId!)
+      sessionStorage.setItem('pool_name', data.name!)
+      sessionStorage.setItem('pool_role', data.role!)
+      router.push('/pool')
+    } catch {
+      setError('Network error. Please try again.')
+    } finally {
+      setLoading(false)
     }
-  }
-
-  if (status === 'sent') {
-    return (
-      <div className="text-center">
-        <p className="text-gray-700 font-medium">Check your email for a login link.</p>
-        <p className="text-gray-500 text-sm mt-1">The link expires in 1 hour.</p>
-      </div>
-    )
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-          Email address
+          Email Address
         </label>
         <input
           id="email"
@@ -55,16 +56,16 @@ export default function LoginForm() {
         />
       </div>
 
-      {status === 'error' && (
-        <p className="text-red-600 text-sm">{errorMessage}</p>
+      {error && (
+        <p className="text-red-600 text-sm">{error}</p>
       )}
 
       <button
         type="submit"
-        disabled={status === 'loading'}
+        disabled={loading}
         className="w-full py-2 px-4 bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white font-semibold rounded-md transition-colors"
       >
-        {status === 'loading' ? 'Sending...' : 'Send me a login link'}
+        {loading ? 'Checking...' : 'Enter Pool'}
       </button>
     </form>
   )

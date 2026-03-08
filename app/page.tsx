@@ -1,14 +1,6 @@
-import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 
-export default async function HomePage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (user) {
-    redirect('/pool')
-  }
-
+export default function HomePage() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-md w-full max-w-sm p-8 text-center">
@@ -26,7 +18,7 @@ export default async function HomePage() {
             Log In
           </Link>
           <p className="text-xs text-gray-400">
-            To join, ask the commissioner for an invite link.
+            Contact Eddie to get access.
           </p>
         </div>
       </div>

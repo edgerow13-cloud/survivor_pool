@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/lib/auth-context'
 import type { Tribe } from '@/types/database'
 
 interface Props {
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export default function TribeForm({ tribe }: Props) {
+  const { userId } = useAuth()
   const router = useRouter()
   const isEdit = !!tribe
   const [name, setName] = useState(tribe?.name ?? '')
@@ -24,15 +26,15 @@ export default function TribeForm({ tribe }: Props) {
     try {
       const endpoint = isEdit ? '/api/admin/update-tribe' : '/api/admin/create-tribe'
       const body = isEdit
-        ? { tribe_id: tribe!.id, name, color, is_merged: isMerged }
-        : { name, color, is_merged: isMerged }
+        ? { userId, tribe_id: tribe!.id, name, color, is_merged: isMerged }
+        : { userId, name, color, is_merged: isMerged }
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
       if (!res.ok) {
-        const data = await res.json()
+        const data = await res.json() as { error?: string }
         setError(data.error ?? 'Failed')
       } else {
         if (!isEdit) {

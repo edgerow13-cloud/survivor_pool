@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/lib/auth-context'
 import type { Contestant, Tribe } from '@/types/database'
 
 interface Props {
@@ -17,6 +18,7 @@ export default function TribeAssignmentRow({
   currentTribeId,
   defaultWeek,
 }: Props) {
+  const { userId } = useAuth()
   const router = useRouter()
   const [weekNum, setWeekNum] = useState(String(defaultWeek))
   const [tribeId, setTribeId] = useState(currentTribeId ?? (tribes[0]?.id ?? ''))
@@ -38,13 +40,14 @@ export default function TribeAssignmentRow({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          userId,
           contestant_id: contestant.id,
           tribe_id: tribeId,
           week_number: Number(weekNum),
         }),
       })
       if (!res.ok) {
-        const data = await res.json()
+        const data = await res.json() as { error?: string }
         setTribeError(data.error ?? 'Failed')
       } else {
         setTribeSuccess(true)
@@ -67,13 +70,14 @@ export default function TribeAssignmentRow({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          userId,
           contestant_id: contestant.id,
           is_eliminated: isElim,
           eliminated_week: isElim && elimWeek ? Number(elimWeek) : null,
         }),
       })
       if (!res.ok) {
-        const data = await res.json()
+        const data = await res.json() as { error?: string }
         setContestantError(data.error ?? 'Failed')
       } else {
         router.refresh()

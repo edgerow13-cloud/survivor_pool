@@ -1,25 +1,33 @@
-import { redirect } from 'next/navigation'
+'use client'
+
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
-import { getAdminClient } from '@/lib/supabase/admin'
+import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
+import { useAuth } from '@/lib/auth-context'
 
-export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+function Spinner() {
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
+    </div>
+  )
+}
 
-  if (!user) {
-    redirect('/login')
-  }
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const { userId, role, isLoading } = useAuth()
+  const router = useRouter()
 
-  const { data: userData } = await getAdminClient()
-    .from('users')
-    .select('role')
-    .eq('id', user.id)
-    .single()
+  useEffect(() => {
+    if (!isLoading && !userId) {
+      router.push('/login')
+    }
+  }, [isLoading, userId, router])
 
-  if (!userData || userData.role !== 'commissioner') {
+  if (isLoading) return <Spinner />
+
+  if (!userId) return null
+
+  if (role !== 'commissioner') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -35,7 +43,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   const navLinks = [
     { href: '/admin', label: 'Overview' },
-    { href: '/admin/players', label: 'Players & Requests' },
+    { href: '/admin/players', label: 'Players' },
     { href: '/admin/weeks', label: 'Weeks & Results' },
     { href: '/admin/contestants', label: 'Contestants' },
     { href: '/admin/tribes', label: 'Tribes' },

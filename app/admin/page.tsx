@@ -1,17 +1,19 @@
 import { getAdminClient } from '@/lib/supabase/admin'
 
+export const dynamic = 'force-dynamic'
+
 export default async function AdminOverviewPage() {
   const [
-    { count: pendingCount },
+    { count: inactiveCount },
     { data: weeks },
     { count: activeCount },
     { count: eliminatedCount },
     { count: remainingCount },
   ] = await Promise.all([
     getAdminClient()
-      .from('join_requests')
+      .from('users')
       .select('*', { count: 'exact', head: true })
-      .eq('status', 'pending'),
+      .eq('status', 'inactive'),
     getAdminClient().from('weeks').select('*').order('week_number', { ascending: false }).limit(1),
     getAdminClient()
       .from('users')
@@ -33,14 +35,10 @@ export default async function AdminOverviewPage() {
     <div>
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Admin Overview</h1>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <StatCard
-          label="Pending Requests"
-          value={pendingCount ?? 0}
-          highlight={(pendingCount ?? 0) > 0}
-        />
         <StatCard label="Active Players" value={activeCount ?? 0} />
         <StatCard label="Eliminated Players" value={eliminatedCount ?? 0} />
         <StatCard label="Remaining Contestants" value={remainingCount ?? 0} />
+        <StatCard label="Inactive Players" value={inactiveCount ?? 0} />
       </div>
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <h2 className="text-lg font-semibold text-gray-800 mb-3">Current Week</h2>

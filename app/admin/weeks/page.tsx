@@ -2,6 +2,8 @@ import { getAdminClient } from '@/lib/supabase/admin'
 import WeekForm from './WeekForm'
 import WeekRow from './WeekRow'
 
+export const dynamic = 'force-dynamic'
+
 export default async function WeeksPage() {
   const [{ data: weeks }, { data: contestants }, { data: users }] = await Promise.all([
     getAdminClient().from('weeks').select('*').order('week_number', { ascending: true }),

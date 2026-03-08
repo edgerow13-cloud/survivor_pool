@@ -1,8 +1,23 @@
-import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
-import type { Contestant, Tribe, ContestantTribeHistory, Week, Pick, User } from '@/types/database'
-import PickForm from './PickForm'
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useAuth } from '@/lib/auth-context'
+import PickForm from './PickForm'
+import type { Contestant, Tribe, ContestantTribeHistory, Week, Pick, User } from '@/types/database'
+
+interface PoolData {
+  me: User
+  contestants: Contestant[]
+  tribes: Tribe[]
+  tribeHistory: ContestantTribeHistory[]
+  weeks: Week[]
+  userPick: Pick | null
+  usedContestantIds: string[]
+  weekAllPicks: Pick[]
+  allUsers: User[]
+}
 
 function formatDate(isoString: string) {
   return new Date(isoString).toLocaleDateString('en-US', {
@@ -26,78 +41,67 @@ function TribeDot({ color }: { color: string }) {
   return <span className="inline-block w-2.5 h-2.5 rounded-full shrink-0 mr-1.5" style={{ backgroundColor: color }} />
 }
 
-export default async function PoolPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+function Spinner() {
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
+    </div>
+  )
+}
 
-  const { data: me } = await supabase.from('users').select('*').eq('id', user.id).single()
-  if (!me) {
+export default function PoolPage() {
+  const { userId, isLoading } = useAuth()
+  const router = useRouter()
+  const [data, setData] = useState<PoolData | null>(null)
+  const [fetchError, setFetchError] = useState<string | null>(null)
+  const [fetching, setFetching] = useState(false)
+
+  useEffect(() => {
+    if (isLoading) return
+    if (!userId) {
+      router.push('/login')
+      return
+    }
+    setFetching(true)
+    fetch('/api/pool/data', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId }),
+    })
+      .then((res) => res.json() as Promise<PoolData & { error?: string }>)
+      .then((json) => {
+        if (json.error) {
+          setFetchError(json.error)
+        } else {
+          setData(json)
+        }
+      })
+      .catch(() => setFetchError('Failed to load pool data.'))
+      .finally(() => setFetching(false))
+  }, [isLoading, userId, router])
+
+  if (isLoading || fetching) return <Spinner />
+
+  if (fetchError) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-xl shadow-md w-full max-w-sm p-8 text-center">
-          <h1 className="text-xl font-bold text-gray-800 mb-2">Account Not Found</h1>
-          <p className="text-gray-500 text-sm">
-            Your account hasn&apos;t been set up yet. Contact the commissioner.
-          </p>
+          <h1 className="text-xl font-bold text-gray-800 mb-2">Error</h1>
+          <p className="text-gray-500 text-sm">{fetchError}</p>
         </div>
       </div>
     )
   }
 
-  // Pending approval screen
-  if (me.status === 'pending_approval') {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl shadow-md w-full max-w-sm p-8 text-center">
-          <h1 className="text-xl font-bold text-gray-800 mb-2">Request Pending</h1>
-          <p className="text-gray-500 text-sm">
-            Your request to join the pool is awaiting commissioner approval. You&apos;ll receive an email once approved.
-          </p>
-        </div>
-      </div>
-    )
-  }
+  if (!data) return null
 
-  // Load all data in parallel
-  const [
-    { data: contestants },
-    { data: tribes },
-    { data: tribeHistory },
-    { data: weeks },
-    { data: allUsers },
-  ] = await Promise.all([
-    supabase.from('contestants').select('*').order('name'),
-    supabase.from('tribes').select('*'),
-    supabase.from('contestant_tribe_history').select('*'),
-    supabase.from('weeks').select('*').order('week_number', { ascending: false }),
-    supabase.from('users').select('*').order('name'),
-  ])
+  const { me, contestants, tribes, tribeHistory, weeks, userPick, usedContestantIds, weekAllPicks, allUsers } = data
 
-  const currentWeek = weeks && weeks.length > 0 ? weeks[0] as Week : null
+  const currentWeek = weeks.length > 0 ? weeks[0] : null
 
-  // Per-user picks for this week and prior weeks
-  const [{ data: userPickData }, { data: usedPicksData }, { data: weekAllPicksData }] = await Promise.all([
-    currentWeek
-      ? supabase.from('picks').select('*').eq('user_id', me.id).eq('week_id', currentWeek.id).maybeSingle()
-      : Promise.resolve({ data: null, error: null }),
-    currentWeek
-      ? supabase.from('picks').select('contestant_id').eq('user_id', me.id).neq('week_id', currentWeek.id).not('contestant_id', 'is', null)
-      : Promise.resolve({ data: [], error: null }),
-    currentWeek && currentWeek.is_results_entered
-      ? supabase.from('picks').select('*').eq('week_id', currentWeek.id)
-      : Promise.resolve({ data: [], error: null }),
-  ])
-
-  const userPick = userPickData as Pick | null
-  const usedContestantIds = ((usedPicksData ?? []) as Array<{ contestant_id: string | null }>)
-    .map((p) => p.contestant_id)
-    .filter((id): id is string => id !== null)
-  const weekAllPicks = (weekAllPicksData ?? []) as Pick[]
-
-  // Build tribe lookup: for each contestant, find their tribe at or before currentWeek.week_number
-  const tribeMap = Object.fromEntries((tribes ?? []).map((t: Tribe) => [t.id, t]))
-  const history = (tribeHistory ?? []) as ContestantTribeHistory[]
+  // Build tribe lookup
+  const tribeMap = Object.fromEntries(tribes.map((t: Tribe) => [t.id, t]))
+  const history = tribeHistory
   const weekNum = currentWeek?.week_number ?? 1
 
   const latestTribeHistoryByContestant: Record<string, ContestantTribeHistory> = {}
@@ -116,38 +120,40 @@ export default async function PoolPage() {
     return tribeMap[h.tribe_id] ?? null
   }
 
-  const allContestants = (contestants ?? []) as Contestant[]
-  const allUsersList = (allUsers ?? []) as User[]
+  const contestantMap = Object.fromEntries(contestants.map((c: Contestant) => [c.id, c]))
 
-  // Build contestant lookup map
-  const contestantMap = Object.fromEntries(allContestants.map((c) => [c.id, c]))
-
-  // Form contestant data (non-eliminated for pick form display)
-  const formContestants = allContestants.map((c) => ({
+  const formContestants = contestants.map((c: Contestant) => ({
     id: c.id,
     name: c.name,
     is_eliminated: c.is_eliminated,
     tribe: getTribe(c.id),
   }))
 
-  // Find the eliminated contestant for this week (if results entered)
   const eliminatedContestant = currentWeek?.eliminated_contestant_id
     ? contestantMap[currentWeek.eliminated_contestant_id] ?? null
     : null
 
-  // Sort users: active first (by name), then eliminated
-  const sortedUsers = [...allUsersList].sort((a, b) => {
+  const sortedUsers = [...allUsers].sort((a: User, b: User) => {
     if (a.status === 'eliminated' && b.status !== 'eliminated') return 1
     if (a.status !== 'eliminated' && b.status === 'eliminated') return -1
     return a.name.localeCompare(b.name)
   })
 
-  // Build pick map for results table
-  const pickByUserId = Object.fromEntries(weekAllPicks.map((p) => [p.user_id, p]))
-
+  const pickByUserId = Object.fromEntries(weekAllPicks.map((p: Pick) => [p.user_id, p]))
   const isEliminated = me.status === 'eliminated'
 
-  // ── No week state ──
+  function refreshData() {
+    if (!userId) return
+    fetch('/api/pool/data', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId }),
+    })
+      .then((res) => res.json() as Promise<PoolData>)
+      .then((json) => setData(json))
+      .catch(() => {})
+  }
+
   if (!currentWeek) {
     return (
       <div className="min-h-screen bg-gray-50 p-6">
@@ -173,23 +179,23 @@ export default async function PoolPage() {
           <span className="text-sm text-gray-500">{me.name}</span>
         </div>
 
-        {/* ── Week header card ── */}
+        {/* Week header card */}
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           {currentWeek.is_results_entered ? (
-            // State: results entered
             <>
               <h2 className="text-lg font-semibold text-gray-800 mb-1">
                 Week {currentWeek.week_number} — Results
               </h2>
               <p className="text-sm text-gray-500 mb-4">
-                {eliminatedContestant
-                  ? <>
-                      <span className="font-medium text-red-600">{eliminatedContestant.name}</span> was eliminated
-                    </>
-                  : 'No elimination this week'}
+                {eliminatedContestant ? (
+                  <>
+                    <span className="font-medium text-red-600">{eliminatedContestant.name}</span> was eliminated
+                  </>
+                ) : (
+                  'No elimination this week'
+                )}
               </p>
 
-              {/* Own pick result */}
               {userPick ? (
                 <div className={`rounded-lg p-4 mb-4 ${
                   userPick.outcome === 'safe' ? 'bg-green-50 border border-green-200' :
@@ -213,10 +219,9 @@ export default async function PoolPage() {
                 </div>
               )}
 
-              {/* All picks table */}
               <h3 className="text-sm font-semibold text-gray-700 mb-2">All Picks</h3>
               <div className="divide-y divide-gray-100">
-                {sortedUsers.filter(u => u.status !== 'pending_approval').map((u) => {
+                {sortedUsers.filter((u: User) => u.status !== 'pending_approval' && u.status !== 'inactive').map((u: User) => {
                   const pick = pickByUserId[u.id]
                   const pickContestant = pick?.contestant_id ? contestantMap[pick.contestant_id] : null
                   const tribe = pick?.contestant_id ? getTribe(pick.contestant_id) : null
@@ -236,7 +241,6 @@ export default async function PoolPage() {
               </div>
             </>
           ) : currentWeek.is_locked || isDeadlinePassed ? (
-            // State: locked, no results yet
             <>
               <h2 className="text-lg font-semibold text-gray-800 mb-1">
                 Week {currentWeek.week_number} — Picks are locked
@@ -260,7 +264,6 @@ export default async function PoolPage() {
               )}
             </>
           ) : (
-            // State: open week
             <>
               <h2 className="text-lg font-semibold text-gray-800 mb-1">
                 Week {currentWeek.week_number}
@@ -276,18 +279,22 @@ export default async function PoolPage() {
               ) : userPick?.contestant_id ? (
                 <PickForm
                   weekId={currentWeek.id}
+                  userId={userId!}
                   currentContestantId={userPick.contestant_id}
                   contestants={formContestants}
                   usedContestantIds={usedContestantIds}
                   initiallyShowForm={false}
+                  onPickSaved={refreshData}
                 />
               ) : (
                 <PickForm
                   weekId={currentWeek.id}
+                  userId={userId!}
                   currentContestantId={null}
                   contestants={formContestants}
                   usedContestantIds={usedContestantIds}
                   initiallyShowForm={true}
+                  onPickSaved={refreshData}
                 />
               )}
             </>
