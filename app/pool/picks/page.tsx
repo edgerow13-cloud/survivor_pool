@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Lock, Check, X } from 'lucide-react'
+import { Lock, Check, X, Settings } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { Header } from '@/components/Header'
 import type { Contestant, Tribe, ContestantTribeHistory, Week, Pick, User } from '@/types/database'
@@ -145,6 +145,7 @@ function PickCell({
 
   const contestant = contestantMap[pick.contestant_id]
   const tribe = getTribeAtWeek(pick.contestant_id, week.week_number, historyByContestant, tribeMap)
+  const isOverride = pick.is_commissioner_override
 
   if (pick.outcome === 'safe') {
     return (
@@ -154,7 +155,10 @@ function PickCell({
           <span className="text-sm font-medium text-[#16A34A] truncate flex-1">
             {contestant?.name ?? '?'}
           </span>
-          <Check className="w-4 h-4 text-[#16A34A] shrink-0" />
+          {isOverride
+            ? <Settings className="w-3.5 h-3.5 text-[#16A34A] opacity-60 shrink-0" />
+            : <Check className="w-4 h-4 text-[#16A34A] shrink-0" />
+          }
         </div>
       </td>
     )
@@ -168,16 +172,35 @@ function PickCell({
           <span className="text-sm font-medium text-[#DC2626] truncate flex-1">
             {contestant?.name ?? '?'}
           </span>
-          <X className="w-4 h-4 text-[#DC2626] shrink-0" />
+          {isOverride
+            ? <Settings className="w-3.5 h-3.5 text-[#DC2626] opacity-60 shrink-0" />
+            : <X className="w-4 h-4 text-[#DC2626] shrink-0" />
+          }
         </div>
       </td>
     )
   }
 
-  // no_pick outcome or null outcome on a resolved week
+  // no_pick outcome
+  if (pick.outcome === 'no_pick') {
+    return (
+      <td className={`${cellBase} bg-[#F3F4F6]`}>
+        <div className="flex items-center justify-center text-gray-400">—</div>
+      </td>
+    )
+  }
+
+  // null outcome + contestant_id set: results not yet entered for this week
+  // (edge case: commissioner override on an unresolved week that the filter let through)
   return (
-    <td className={`${cellBase} bg-[#F3F4F6]`}>
-      <div className="flex items-center justify-center text-gray-400">—</div>
+    <td className={cellBase}>
+      <div className="flex items-center gap-1.5 p-2 rounded-md bg-gray-100 min-w-0">
+        {tribe && <TribeDot color={tribe.color} />}
+        <span className="text-sm font-medium text-gray-600 truncate flex-1">
+          {contestant?.name ?? '?'}
+        </span>
+        {isOverride && <Settings className="w-3.5 h-3.5 text-gray-400 shrink-0" />}
+      </div>
     </td>
   )
 }
@@ -444,6 +467,12 @@ export default function PicksHistoryPage() {
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 rounded border-2 border-[#F97316] bg-orange-50 shrink-0" />
                     <span className="text-gray-600">Your pick</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded bg-[#DCFCE7] flex items-center justify-center shrink-0">
+                      <Settings className="w-3 h-3 text-[#16A34A] opacity-60" />
+                    </div>
+                    <span className="text-gray-600">Commissioner override</span>
                   </div>
                 </div>
               </div>
