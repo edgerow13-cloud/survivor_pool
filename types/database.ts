@@ -9,6 +9,7 @@ export interface User {
   role: UserRole
   status: UserStatus
   eliminated_week: number | null
+  avatar_url: string | null
   created_at: string
 }
 

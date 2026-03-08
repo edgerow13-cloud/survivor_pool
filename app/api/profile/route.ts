@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
 
   const { data: user } = await db
     .from('users')
-    .select('id, name')
+    .select('id, name, avatar_url')
     .eq('id', userId)
     .single()
 
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
   })
 
   return NextResponse.json({
-    user: { id: user.id, name: user.name },
+    user: { id: user.id, name: user.name, avatar_url: user.avatar_url ?? null },
     contestants,
     winnerPick: winnerPick ?? null,
     ep3Deadline: ep3Week?.episode_date ?? null,

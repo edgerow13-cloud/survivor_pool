@@ -7,6 +7,7 @@ import { Lock, Check, X, Settings } from 'lucide-react'
 import Image from 'next/image'
 import { useAuth } from '@/lib/auth-context'
 import { Header } from '@/components/Header'
+import { UserAvatar } from '@/components/UserAvatar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import type { Contestant, Tribe, ContestantTribeHistory, Week, Pick, User, WeekElimination } from '@/types/database'
 
@@ -599,17 +600,24 @@ export default function PicksHistoryPage() {
                               <td
                                 className={`${frozenCellClass(isElim)} px-4 py-3 border-r border-gray-200 min-w-[150px]`}
                               >
-                                <div className="flex flex-col">
-                                  <span
-                                    className={`font-medium ${isElim ? 'line-through text-gray-400' : 'text-gray-900'}`}
-                                  >
-                                    {u.name}
-                                  </span>
-                                  {isElim && u.eliminated_week && (
-                                    <span className="text-xs text-[#DC2626] mt-0.5">
-                                      Out Wk {u.eliminated_week}
+                                <div className="flex items-center gap-2">
+                                  <UserAvatar
+                                    name={u.name}
+                                    avatarUrl={u.avatar_url ?? null}
+                                    size={24}
+                                  />
+                                  <div className="flex flex-col min-w-0">
+                                    <span
+                                      className={`font-medium truncate ${isElim ? 'line-through text-gray-400' : 'text-gray-900'}`}
+                                    >
+                                      {u.name}
                                     </span>
-                                  )}
+                                    {isElim && u.eliminated_week && (
+                                      <span className="text-xs text-[#DC2626] mt-0.5">
+                                        Out Wk {u.eliminated_week}
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
                               </td>
                               {/* Winner pick cell */}

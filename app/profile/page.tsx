@@ -2,9 +2,10 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Check, ChevronDown } from 'lucide-react'
+import { Check, ChevronDown, Upload } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { Header } from '@/components/Header'
+import { UserAvatar } from '@/components/UserAvatar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -23,7 +24,7 @@ interface ContestantOption {
 }
 
 interface ProfileData {
-  user: { id: string; name: string }
+  user: { id: string; name: string; avatar_url: string | null }
   contestants: ContestantOption[]
   winnerPick: { contestant_id: string } | null
   ep3Deadline: string | null
@@ -69,6 +70,12 @@ export default function ProfilePage() {
   const [pickSuccess, setPickSuccess] = useState(false)
   const [pickError, setPickError] = useState<string | null>(null)
 
+  // Avatar upload
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [avatarUploading, setAvatarUploading] = useState(false)
+  const [avatarError, setAvatarError] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
   // Keep ref in sync so blur handler always reads the latest selectedContestantId
   useEffect(() => {
     selectedIdRef.current = selectedContestantId
@@ -94,6 +101,7 @@ export default function ProfilePage() {
         } else {
           setProfileData(json)
           setNameInput(json.user.name)
+          setAvatarUrl(json.user.avatar_url)
           const existingId = json.winnerPick?.contestant_id ?? null
           setSelectedContestantId(existingId)
           selectedIdRef.current = existingId
@@ -106,6 +114,41 @@ export default function ProfilePage() {
       .catch(() => setFetchError('Failed to load profile data.'))
       .finally(() => setFetching(false))
   }, [isLoading, userId, router])
+
+  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file || !userId) return
+
+    // Client-side pre-validation (server also validates)
+    if (!['image/jpeg', 'image/png'].includes(file.type)) {
+      setAvatarError('Only JPEG and PNG files are accepted')
+      return
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setAvatarError('File must be 2 MB or smaller')
+      return
+    }
+
+    setAvatarError(null)
+    setAvatarUploading(true)
+    try {
+      const form = new FormData()
+      form.append('userId', userId)
+      form.append('file', file)
+      const res = await fetch('/api/profile/avatar', { method: 'POST', body: form })
+      const json = await res.json() as { avatarUrl?: string; error?: string }
+      if (!res.ok) {
+        setAvatarError(json.error ?? 'Upload failed')
+      } else if (json.avatarUrl) {
+        setAvatarUrl(json.avatarUrl)
+      }
+    } catch {
+      setAvatarError('Network error')
+    } finally {
+      setAvatarUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
 
   async function saveName() {
     if (!userId || !nameInput.trim()) return
@@ -217,6 +260,42 @@ export default function ProfilePage() {
       <main className="flex-1">
         <div className="max-w-lg mx-auto px-4 py-8 space-y-6">
           <h1 className="text-2xl font-bold text-gray-900">Your Profile</h1>
+
+          {/* ── Avatar ────────────────────────────────────────── */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Profile Photo</CardTitle>
+              <CardDescription>
+                Shown next to your name in the picks grid.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-5">
+                <UserAvatar name={nameInput} avatarUrl={avatarUrl} size={72} />
+                <div className="flex flex-col gap-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png"
+                    onChange={handleAvatarChange}
+                    className="hidden"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={avatarUploading}
+                    onClick={() => fileInputRef.current?.click()}
+                    className="gap-2"
+                  >
+                    <Upload className="w-3.5 h-3.5" />
+                    {avatarUploading ? 'Uploading…' : 'Upload photo'}
+                  </Button>
+                  <p className="text-xs text-muted-foreground">JPEG or PNG · max 2 MB</p>
+                  {avatarError && <p className="text-xs text-red-600">{avatarError}</p>}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* ── Display name ──────────────────────────────────── */}
           <Card>
