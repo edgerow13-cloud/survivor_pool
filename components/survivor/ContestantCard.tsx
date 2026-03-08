@@ -9,7 +9,7 @@ interface ContestantCardProps {
   tribe: { name: string; color: string } | null
   isEliminated: boolean
   eliminatedWeek: number | null
-  isUsed: boolean
+  usedWeek: number | null
   isSelected: boolean
   isSubmitted: boolean
   onSelect: (id: string) => void
@@ -21,11 +21,12 @@ export function ContestantCard({
   tribe,
   isEliminated,
   eliminatedWeek,
-  isUsed,
+  usedWeek,
   isSelected,
   isSubmitted,
   onSelect,
 }: ContestantCardProps) {
+  const isUsed = usedWeek !== null
   const isDisabled = isUsed || isEliminated
 
   return (
@@ -81,7 +82,9 @@ export function ContestantCard({
 
       {/* Status label */}
       {isUsed && (
-        <span className="text-xs text-gray-500 mt-1">Already picked</span>
+        <span className="text-xs text-gray-500 mt-1">
+          {usedWeek ? `Used Wk ${usedWeek}` : 'Already picked'}
+        </span>
       )}
       {isEliminated && !isUsed && (
         <span className="text-xs text-gray-500 mt-1">

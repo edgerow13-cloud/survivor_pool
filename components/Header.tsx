@@ -4,8 +4,17 @@ import Link from 'next/link'
 import { Users } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 
-export function Header() {
+interface NavLink {
+  href: string
+  label: string
+  shortLabel: string
+}
+
+const defaultNavLink: NavLink = { href: '/pool/picks', label: 'View Full Grid', shortLabel: 'Grid' }
+
+export function Header({ navLink }: { navLink?: NavLink }) {
   const { name, logout } = useAuth()
+  const link = navLink ?? defaultNavLink
 
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
@@ -16,12 +25,12 @@ export function Header() {
         </Link>
         <div className="flex items-center gap-4">
           <Link
-            href="/pool/picks"
+            href={link.href}
             className="flex items-center gap-1.5 text-sm font-medium text-[#F97316] hover:text-orange-600 transition-colors"
           >
             <Users className="w-4 h-4" />
-            <span className="hidden sm:inline">View Full Grid</span>
-            <span className="sm:hidden">Grid</span>
+            <span className="hidden sm:inline">{link.label}</span>
+            <span className="sm:hidden">{link.shortLabel}</span>
           </Link>
           <div className="flex items-center gap-3">
             <span className="text-sm font-medium text-gray-700">{name}</span>

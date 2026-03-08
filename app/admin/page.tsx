@@ -38,7 +38,8 @@ export default async function AdminOverviewPage() {
     getAdminClient()
       .from('weeks')
       .select('*')
-      .order('week_number', { ascending: false })
+      .eq('is_results_entered', false)
+      .order('week_number', { ascending: true })
       .limit(1),
   ])
 

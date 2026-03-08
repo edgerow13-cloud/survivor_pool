@@ -21,6 +21,7 @@ interface Props {
   currentContestantId: string | null
   contestants: ContestantOption[]
   usedContestantIds: string[]
+  usedContestantWeekMap: Record<string, number>
   onPickSaved: () => void
 }
 
@@ -31,6 +32,7 @@ export default function PickForm({
   currentContestantId,
   contestants,
   usedContestantIds,
+  usedContestantWeekMap,
   onPickSaved,
 }: Props) {
   const router = useRouter()
@@ -98,6 +100,7 @@ export default function PickForm({
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {contestants.map((c) => {
           const isUsed = usedSet.has(c.id) && c.id !== currentContestantId
+          const usedWeek = isUsed ? (usedContestantWeekMap[c.id] ?? null) : null
           return (
             <ContestantCard
               key={c.id}
@@ -106,7 +109,7 @@ export default function PickForm({
               tribe={c.tribe}
               isEliminated={c.is_eliminated}
               eliminatedWeek={c.eliminated_week}
-              isUsed={isUsed}
+              usedWeek={usedWeek}
               isSelected={selected === c.id}
               isSubmitted={isSubmitted && selected === c.id}
               onSelect={setSelected}

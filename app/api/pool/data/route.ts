@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
       currentWeek
         ? getAdminClient()
             .from('picks')
-            .select('contestant_id')
+            .select('contestant_id, week_id')
             .eq('user_id', userId)
             .neq('week_id', currentWeek.id)
             .not('contestant_id', 'is', null)
@@ -59,11 +59,12 @@ export async function POST(request: NextRequest) {
         : Promise.resolve({ data: [], error: null }),
     ])
 
-  const usedContestantIds = (
-    (usedPicksData ?? []) as Array<{ contestant_id: string | null }>
-  )
+  const usedPicksTyped = (usedPicksData ?? []) as Array<{ contestant_id: string | null; week_id: string }>
+  const usedContestantIds = usedPicksTyped
     .map((p) => p.contestant_id)
     .filter((id): id is string => id !== null)
+  const usedPicks = usedPicksTyped
+    .filter((p): p is { contestant_id: string; week_id: string } => p.contestant_id !== null)
 
   return NextResponse.json({
     me,
@@ -73,6 +74,7 @@ export async function POST(request: NextRequest) {
     weeks: weeks ?? [],
     userPick: userPickData ?? null,
     usedContestantIds,
+    usedPicks,
     weekAllPicks: weekAllPicksData ?? [],
     allUsers: allUsers ?? [],
   })

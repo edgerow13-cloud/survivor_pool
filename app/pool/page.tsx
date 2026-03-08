@@ -16,6 +16,7 @@ interface PoolData {
   weeks: Week[]
   userPick: Pick | null
   usedContestantIds: string[]
+  usedPicks: Array<{ contestant_id: string; week_id: string }>
   weekAllPicks: Pick[]
   allUsers: User[]
 }
@@ -127,7 +128,7 @@ export default function PoolPage() {
 
   if (!data) return null
 
-  const { me, contestants, tribes, tribeHistory, weeks, userPick, usedContestantIds, weekAllPicks, allUsers } = data
+  const { me, contestants, tribes, tribeHistory, weeks, userPick, usedContestantIds, usedPicks, weekAllPicks, allUsers } = data
 
   // First unresolved week
   const currentWeek = weeks.find((w: Week) => !w.is_results_entered) ?? null
@@ -153,6 +154,14 @@ export default function PoolPage() {
   }
 
   const contestantMap = Object.fromEntries(contestants.map((c: Contestant) => [c.id, c]))
+
+  // Map contestant ID → week number it was previously picked (for "Used Wk N" display)
+  const weekIdToNumber = Object.fromEntries(weeks.map((w: Week) => [w.id, w.week_number]))
+  const usedContestantWeekMap: Record<string, number> = {}
+  for (const p of usedPicks) {
+    const weekNumber = weekIdToNumber[p.week_id]
+    if (weekNumber !== undefined) usedContestantWeekMap[p.contestant_id] = weekNumber
+  }
 
   const formContestants = contestants.map((c: Contestant) => ({
     id: c.id,
@@ -346,6 +355,7 @@ export default function PoolPage() {
               currentContestantId={userPick?.contestant_id ?? null}
               contestants={formContestants}
               usedContestantIds={usedContestantIds}
+              usedContestantWeekMap={usedContestantWeekMap}
               onPickSaved={refreshData}
             />
           )}

@@ -19,6 +19,10 @@ interface PicksHistoryData {
   currentUserId: string
 }
 
+function formatMonDay(isoString: string): string {
+  return new Date(isoString).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
 /** "Jenna Lewis-Dougherty" → "Jenna L." */
 function shortName(name: string): string {
   const parts = name.trim().split(/\s+/)
@@ -273,7 +277,7 @@ export default function PicksHistoryPage() {
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] flex flex-col">
-      <Header />
+      <Header navLink={{ href: '/pool', label: 'Player Selection', shortLabel: 'Pick' }} />
 
       <main className="flex-1">
         <div className="max-w-full mx-auto px-4 py-6">
@@ -324,6 +328,9 @@ export default function PicksHistoryPage() {
                               }`}
                             >
                               <div>Wk {week.week_number}</div>
+                              <div className={`text-xs font-normal mt-0.5 ${isCurrent ? 'text-orange-100' : 'text-gray-400'}`}>
+                                {formatMonDay(week.episode_date)}
+                              </div>
                               {elimContestant && (
                                 <div
                                   className={`text-xs font-normal mt-0.5 ${isCurrent ? 'text-orange-100' : 'text-gray-500'}`}
