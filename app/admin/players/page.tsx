@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils'
 import AddPlayerForm from './AddPlayerForm'
 import DeactivateButton from './DeactivateButton'
 import ReinstateButton from './ReinstateButton'
+import WinnerPickCell, { type ContestantOption } from './WinnerPickCell'
 import {
   CommissionerOverridesCard,
   type OverridePlayer,
@@ -41,7 +42,12 @@ function RoleBadge({ role }: { role: User['role'] }) {
 }
 
 export default async function PlayersPage() {
-  const [{ data: users }, { data: weeksData }, { data: contestantsData }] = await Promise.all([
+  const [
+    { data: users },
+    { data: weeksData },
+    { data: allContestantsData },
+    { data: winnerPicksData },
+  ] = await Promise.all([
     getAdminClient().from('users').select('*').order('status').order('name'),
     getAdminClient()
       .from('weeks')
@@ -49,12 +55,27 @@ export default async function PlayersPage() {
       .order('week_number', { ascending: true }),
     getAdminClient()
       .from('contestants')
-      .select('id, name')
-      .eq('is_eliminated', false)
+      .select('id, name, is_eliminated, eliminated_week')
       .order('name'),
+    getAdminClient().from('winner_picks').select('user_id, contestant_id'),
   ])
 
   const typedUsers = (users ?? []) as User[]
+
+  // Winner pick lookups
+  const winnerPickByUserId: Record<string, string> = {}
+  for (const wp of winnerPicksData ?? []) {
+    winnerPickByUserId[wp.user_id as string] = wp.contestant_id as string
+  }
+
+  type ContestantRow = { id: string; name: string; is_eliminated: boolean; eliminated_week: number | null }
+  const contestantRows = (allContestantsData ?? []) as ContestantRow[]
+  const contestantById = Object.fromEntries(contestantRows.map((c) => [c.id, c]))
+
+  // Non-eliminated contestants for the edit dropdown
+  const nonEliminatedContestants: ContestantOption[] = contestantRows
+    .filter((c) => !c.is_eliminated)
+    .map((c) => ({ id: c.id, name: c.name }))
 
   const overridePlayers: OverridePlayer[] = typedUsers
     .filter((u) => u.status !== 'inactive')
@@ -65,9 +86,9 @@ export default async function PlayersPage() {
     week_number: w.week_number as number,
   }))
 
-  const overrideContestants: OverrideContestant[] = (contestantsData ?? []).map((c) => ({
-    id: c.id as string,
-    name: c.name as string,
+  const overrideContestants: OverrideContestant[] = nonEliminatedContestants.map((c) => ({
+    id: c.id,
+    name: c.name,
   }))
 
   return (
@@ -101,6 +122,7 @@ export default async function PlayersPage() {
                   <TableHead>Status</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Elim. Week</TableHead>
+                  <TableHead>Winner Pick</TableHead>
                   <TableHead />
                 </TableRow>
               </TableHeader>
@@ -122,6 +144,22 @@ export default async function PlayersPage() {
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {user.eliminated_week ? `Week ${user.eliminated_week}` : '—'}
+                    </TableCell>
+                    <TableCell>
+                      {(() => {
+                        const pickedId = winnerPickByUserId[user.id] ?? null
+                        const picked = pickedId ? (contestantById[pickedId] ?? null) : null
+                        return (
+                          <WinnerPickCell
+                            playerId={user.id}
+                            contestantId={pickedId}
+                            contestantName={picked?.name ?? null}
+                            isEliminated={picked?.is_eliminated ?? false}
+                            eliminatedWeek={picked?.eliminated_week ?? null}
+                            contestants={nonEliminatedContestants}
+                          />
+                        )
+                      })()}
                     </TableCell>
                     <TableCell>
                       {user.status === 'active' && user.role !== 'commissioner' && (
