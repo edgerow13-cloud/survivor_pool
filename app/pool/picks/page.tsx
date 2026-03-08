@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Lock, Check, X, Settings } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { Header } from '@/components/Header'
-import type { Contestant, Tribe, ContestantTribeHistory, Week, Pick, User } from '@/types/database'
+import type { Contestant, Tribe, ContestantTribeHistory, Week, Pick, User, WeekElimination } from '@/types/database'
 
 const TOTAL_WEEKS = 13
 
@@ -17,6 +17,7 @@ interface PicksHistoryData {
   tribeHistory: ContestantTribeHistory[]
   tribes: Tribe[]
   currentUserId: string
+  weekEliminations: WeekElimination[]
 }
 
 function formatMonDay(isoString: string): string {
@@ -253,12 +254,19 @@ export default function PicksHistoryPage() {
 
   if (!data) return null
 
-  const { weeks, allUsers, allPicks, contestants, tribeHistory, tribes, currentUserId } = data
+  const { weeks, allUsers, allPicks, contestants, tribeHistory, tribes, currentUserId, weekEliminations } = data
 
   const tribeMap: Record<string, Tribe> = Object.fromEntries(tribes.map((t) => [t.id, t]))
   const contestantMap: Record<string, Contestant> = Object.fromEntries(
     contestants.map((c) => [c.id, c]),
   )
+
+  // Build weekId → eliminated contestant IDs
+  const elimsByWeekId: Record<string, string[]> = {}
+  for (const e of weekEliminations) {
+    if (!elimsByWeekId[e.week_id]) elimsByWeekId[e.week_id] = []
+    elimsByWeekId[e.week_id].push(e.contestant_id)
+  }
 
   const pickMap: Record<string, Record<string, Pick>> = {}
   for (const pick of allPicks) {
@@ -335,9 +343,10 @@ export default function PicksHistoryPage() {
                           const isFuture =
                             currentWeekNumber !== null &&
                             week.week_number > currentWeekNumber
-                          const elimContestant = week.eliminated_contestant_id
-                            ? contestantMap[week.eliminated_contestant_id]
-                            : null
+                          const elimIds = elimsByWeekId[week.id] ?? []
+                          const elimNames = elimIds
+                            .map((id) => contestantMap[id]?.name)
+                            .filter(Boolean) as string[]
 
                           return (
                             <th
@@ -354,14 +363,14 @@ export default function PicksHistoryPage() {
                               <div className={`text-xs font-normal mt-0.5 ${isCurrent ? 'text-orange-100' : 'text-gray-400'}`}>
                                 {formatMonDay(week.episode_date)}
                               </div>
-                              {elimContestant && (
+                              {elimNames.length > 0 && (
                                 <div
                                   className={`text-xs font-normal mt-0.5 ${isCurrent ? 'text-orange-100' : 'text-gray-500'}`}
                                 >
-                                  {shortName(elimContestant.name)}
+                                  {elimNames.map((n) => shortName(n)).join(' + ')}
                                 </div>
                               )}
-                              {isCurrent && !elimContestant && (
+                              {isCurrent && elimNames.length === 0 && (
                                 <div className="text-xs font-normal mt-0.5 text-orange-100">
                                   In progress
                                 </div>

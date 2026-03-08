@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/auth-context'
 import { Header } from '@/components/Header'
 import { CountdownTimer } from '@/components/survivor/CountdownTimer'
 import PickForm from './PickForm'
-import type { Contestant, Tribe, ContestantTribeHistory, Week, Pick, User } from '@/types/database'
+import type { Contestant, Tribe, ContestantTribeHistory, Week, Pick, User, WeekElimination } from '@/types/database'
 
 interface PoolData {
   me: User
@@ -19,6 +19,7 @@ interface PoolData {
   usedPicks: Array<{ contestant_id: string; week_id: string }>
   weekAllPicks: Pick[]
   allUsers: User[]
+  weekEliminations: WeekElimination[]
 }
 
 function formatDeadline(isoString: string) {
@@ -128,7 +129,7 @@ export default function PoolPage() {
 
   if (!data) return null
 
-  const { me, contestants, tribes, tribeHistory, weeks, userPick, usedContestantIds, usedPicks, weekAllPicks, allUsers } = data
+  const { me, contestants, tribes, tribeHistory, weeks, userPick, usedContestantIds, usedPicks, weekAllPicks, allUsers, weekEliminations } = data
 
   // First unresolved week
   const currentWeek = weeks.find((w: Week) => !w.is_results_entered) ?? null
@@ -171,9 +172,12 @@ export default function PoolPage() {
     tribe: getTribe(c.id),
   }))
 
-  const eliminatedContestant = currentWeek?.eliminated_contestant_id
-    ? contestantMap[currentWeek.eliminated_contestant_id] ?? null
-    : null
+  const currentWeekElimIds = weekEliminations
+    .filter((e) => e.week_id === currentWeek?.id)
+    .map((e) => e.contestant_id)
+  const eliminatedContestants: Contestant[] = currentWeekElimIds
+    .map((id) => contestantMap[id])
+    .filter((c): c is Contestant => c !== undefined)
 
   const sortedUsers = [...allUsers].sort((a: User, b: User) => {
     if (a.status === 'eliminated' && b.status !== 'eliminated') return 1
@@ -212,10 +216,15 @@ export default function PoolPage() {
                 Week {currentWeek.week_number} — Results
               </h1>
               <p className="text-sm text-gray-500 mt-1">
-                {eliminatedContestant ? (
+                {eliminatedContestants.length > 0 ? (
                   <>
-                    <span className="font-medium text-red-600">{eliminatedContestant.name}</span>{' '}
-                    was eliminated
+                    {eliminatedContestants.map((c, i) => (
+                      <span key={c.id}>
+                        {i > 0 && ' and '}
+                        <span className="font-medium text-red-600">{c.name}</span>
+                      </span>
+                    ))}{' '}
+                    {eliminatedContestants.length === 1 ? 'was' : 'were'} eliminated
                   </>
                 ) : (
                   'No elimination this week'

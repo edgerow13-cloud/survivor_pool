@@ -42,7 +42,13 @@ export interface Week {
   episode_date: string
   is_locked: boolean
   is_results_entered: boolean
-  eliminated_contestant_id: string | null
+  created_at: string
+}
+
+export interface WeekElimination {
+  id: string
+  week_id: string
+  contestant_id: string
   created_at: string
 }
 

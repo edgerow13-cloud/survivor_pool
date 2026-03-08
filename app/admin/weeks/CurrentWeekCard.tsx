@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Lock, Check, ExternalLink, AlertTriangle } from 'lucide-react'
+import { Lock, Check, ExternalLink, AlertTriangle, Plus, Trash2 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -17,12 +17,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import type { Week, Contestant } from '@/types/database'
+import type { Week, Contestant, WeekElimination } from '@/types/database'
 
 interface Props {
   week: Week
-  /** Non-eliminated contestants + the already-eliminated one for this week (for re-entering) */
+  /** Non-eliminated contestants + the already-eliminated ones for this week (for re-entering) */
   contestants: Contestant[]
+  weekEliminations: WeekElimination[]
   picksSubmitted: number
   totalActivePlayers: number
 }
@@ -47,6 +48,7 @@ function formatTime(isoString: string) {
 export default function CurrentWeekCard({
   week,
   contestants,
+  weekEliminations,
   picksSubmitted,
   totalActivePlayers,
 }: Props) {
@@ -60,7 +62,10 @@ export default function CurrentWeekCard({
 
   // Results flow state (only active once locked)
   const [resultsStep, setResultsStep] = useState<null | 1 | 2>(null)
-  const [selectedContestant, setSelectedContestant] = useState('')
+  // Multi-elimination: array of contestant IDs (init from existing eliminations)
+  const [selectedContestants, setSelectedContestants] = useState<string[]>(
+    weekEliminations.length > 0 ? weekEliminations.map((e) => e.contestant_id) : [''],
+  )
   const [eliminationConfirmed, setEliminationConfirmed] = useState(false)
   const [tribeChange, setTribeChange] = useState('no-changes')
 
@@ -69,13 +74,41 @@ export default function CurrentWeekCard({
   const [completeLoading, setCompleteLoading] = useState(false)
   const [completeError, setCompleteError] = useState<string | null>(null)
 
-  const activeContestants = contestants
-    .filter((c) => !c.is_eliminated || c.id === week.eliminated_contestant_id)
-    .sort((a, b) => a.name.localeCompare(b.name))
-
-  const selectedContestantName = activeContestants.find((c) => c.id === selectedContestant)?.name
+  const sortedContestants = [...contestants].sort((a, b) => a.name.localeCompare(b.name))
 
   const playersWithNoPick = Math.max(0, totalActivePlayers - picksSubmitted)
+
+  function handleAddRow() {
+    setSelectedContestants((prev) => [...prev, ''])
+  }
+
+  function handleRemoveRow(index: number) {
+    setSelectedContestants((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  function handleChangeRow(index: number, id: string) {
+    setSelectedContestants((prev) => prev.map((v, i) => (i === index ? id : v)))
+  }
+
+  // IDs selected in other slots (for excluding from each slot's dropdown)
+  function otherSelected(index: number): Set<string> {
+    return new Set(selectedContestants.filter((v, i) => i !== index && v !== ''))
+  }
+
+  const allRowsFilled = selectedContestants.length > 0 && selectedContestants.every((v) => v !== '')
+
+  // Names for success message
+  const selectedNames = selectedContestants
+    .map((id) => sortedContestants.find((c) => c.id === id)?.name)
+    .filter(Boolean) as string[]
+
+  function confirmationText(): string {
+    if (selectedNames.length === 0) return 'No elimination this week'
+    if (selectedNames.length === 1) return `${selectedNames[0]} marked as eliminated`
+    const last = selectedNames[selectedNames.length - 1]
+    const rest = selectedNames.slice(0, -1).join(', ')
+    return `${rest} and ${last} marked as eliminated`
+  }
 
   async function handleLockWeek() {
     if (!userId) return
@@ -106,13 +139,14 @@ export default function CurrentWeekCard({
     setCompleteLoading(true)
     setCompleteError(null)
     try {
+      const elimIds = selectedContestants.filter((id) => id !== '')
       const res = await fetch('/api/admin/enter-results', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId,
           week_id: week.id,
-          eliminated_contestant_id: selectedContestant || null,
+          eliminated_contestant_ids: elimIds,
         }),
       })
       if (!res.ok) {
@@ -217,37 +251,74 @@ export default function CurrentWeekCard({
 
                   {!eliminationConfirmed ? (
                     <>
-                      <Select value={selectedContestant} onValueChange={setSelectedContestant}>
-                        <SelectTrigger className="w-full max-w-sm">
-                          <SelectValue placeholder="Select eliminated contestant" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {activeContestants.map((c) => (
-                            <SelectItem key={c.id} value={c.id}>
-                              {c.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <div className="space-y-2">
+                        {selectedContestants.map((selected, index) => {
+                          const excluded = otherSelected(index)
+                          const available = sortedContestants.filter(
+                            (c) => !excluded.has(c.id) || c.id === selected,
+                          )
+                          return (
+                            <div key={index} className="flex items-center gap-2">
+                              <Select
+                                value={selected}
+                                onValueChange={(id) => handleChangeRow(index, id)}
+                              >
+                                <SelectTrigger className="flex-1 max-w-sm">
+                                  <SelectValue placeholder="Select eliminated contestant" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {available.map((c) => (
+                                    <SelectItem key={c.id} value={c.id}>
+                                      {c.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              {selectedContestants.length > 1 && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleRemoveRow(index)}
+                                  className="text-muted-foreground hover:text-red-600 shrink-0"
+                                >
+                                  <Trash2 className="size-4" />
+                                </Button>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleAddRow}
+                          disabled={!allRowsFilled}
+                          className="text-sm"
+                        >
+                          <Plus className="size-3.5 mr-1" />
+                          Add another elimination
+                        </Button>
+                      </div>
                       <Button
                         onClick={() => {
                           setEliminationConfirmed(true)
                           setResultsStep(2)
                         }}
-                        disabled={!selectedContestant}
+                        disabled={!allRowsFilled}
                         className="bg-[#DC2626] hover:bg-[#DC2626]/90 text-white disabled:opacity-50"
                       >
-                        Confirm Elimination
+                        Confirm Elimination{selectedContestants.length > 1 ? 's' : ''}
                       </Button>
                       <p className="text-xs text-muted-foreground">
-                        Players who picked this contestant will be marked eliminated. Players with no
-                        pick this week will also be eliminated.
+                        Players who picked eliminated contestant(s) will be marked eliminated.
+                        Players with no pick this week will also be eliminated.
                       </p>
                     </>
                   ) : (
                     <p className="text-sm text-[#16A34A] flex items-center gap-2">
                       <Check className="size-4" />
-                      {selectedContestantName} marked as eliminated
+                      {confirmationText()}
                     </p>
                   )}
                 </div>

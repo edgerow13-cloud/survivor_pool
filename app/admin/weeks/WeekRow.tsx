@@ -19,7 +19,7 @@ export default function WeekRow({ week, contestants, users, eliminatedContestant
   const [error, setError] = useState<string | null>(null)
   const [showResults, setShowResults] = useState(false)
   const [showOverride, setShowOverride] = useState(false)
-  const [selectedContestant, setSelectedContestant] = useState(week.eliminated_contestant_id ?? '')
+  const [selectedContestant, setSelectedContestant] = useState('')
   const [overrideUser, setOverrideUser] = useState('')
   const [overrideContestant, setOverrideContestant] = useState('')
 
@@ -104,9 +104,7 @@ export default function WeekRow({ week, contestants, users, eliminatedContestant
     }
   }
 
-  const resultContestants = contestants.filter(
-    (c) => !c.is_eliminated || c.id === week.eliminated_contestant_id
-  )
+  const resultContestants = contestants.filter((c) => !c.is_eliminated)
 
   const pickContestants = contestants.filter((c) => !c.is_eliminated)
 
