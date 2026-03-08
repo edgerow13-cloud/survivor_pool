@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Lock, Check, X, Settings } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { Header } from '@/components/Header'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import type { Contestant, Tribe, ContestantTribeHistory, Week, Pick, User, WeekElimination } from '@/types/database'
 
 const TOTAL_WEEKS = 13
@@ -62,7 +63,75 @@ function Spinner() {
   )
 }
 
-// ─── Cell renderer ────────────────────────────────────────────────────────────
+// ─── Locked cell with hover popover ───────────────────────────────────────────
+
+interface LockedPickCellProps {
+  userName: string
+  availableContestants: Contestant[]
+  currentWeekNumber: number
+  historyByContestant: Record<string, ContestantTribeHistory[]>
+  tribeMap: Record<string, Tribe>
+}
+
+function LockedPickCell({
+  userName,
+  availableContestants,
+  currentWeekNumber,
+  historyByContestant,
+  tribeMap,
+}: LockedPickCellProps) {
+  const [isOpen, setIsOpen] = useState(false)
+  const cellBase = 'px-3 py-3 min-w-[140px] border-r border-gray-200'
+
+  return (
+    <td
+      className={`${cellBase} bg-[#F3F4F6]`}
+      onMouseEnter={() => setIsOpen(true)}
+      onMouseLeave={() => setIsOpen(false)}
+    >
+      <Popover open={isOpen} onOpenChange={setIsOpen}>
+        <PopoverTrigger asChild>
+          <div className="flex items-center justify-center text-gray-400 gap-1.5 cursor-default">
+            <Lock className="w-4 h-4" />
+          </div>
+        </PopoverTrigger>
+        <PopoverContent
+          className="w-56 p-3"
+          side="top"
+          align="center"
+          // Prevent the popover from stealing focus / causing flickering on hover
+          onOpenAutoFocus={(e) => e.preventDefault()}
+        >
+          <p className="text-xs font-semibold text-gray-700 mb-2">
+            {userName}&apos;s available picks
+          </p>
+          {availableContestants.length === 0 ? (
+            <p className="text-xs text-gray-400">No contestants available</p>
+          ) : (
+            <ul className="space-y-1 max-h-48 overflow-y-auto pr-1">
+              {availableContestants.map((c) => {
+                const tribe = getTribeAtWeek(
+                  c.id,
+                  currentWeekNumber,
+                  historyByContestant,
+                  tribeMap,
+                )
+                return (
+                  <li key={c.id} className="flex items-center gap-2 text-xs text-gray-700">
+                    {tribe && <TribeDot color={tribe.color} />}
+                    <span>{c.name}</span>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </PopoverContent>
+      </Popover>
+    </td>
+  )
+}
+
+// ─── Standard pick cell ────────────────────────────────────────────────────────
 
 interface CellProps {
   week: Week
@@ -96,38 +165,27 @@ function PickCell({
     )
   }
 
-  // Current week — other players' picks are hidden
-  if (isCurrentWeek) {
-    if (isOwnRow) {
-      if (!pick?.contestant_id) {
-        // Own row, no pick yet
-        return (
-          <td className={`${cellBase} bg-[#F3F4F6]`}>
-            <div className="flex items-center justify-center text-gray-400">—</div>
-          </td>
-        )
-      }
-      const contestant = contestantMap[pick.contestant_id]
-      const tribe = getTribeAtWeek(pick.contestant_id, week.week_number, historyByContestant, tribeMap)
+  // Current week — own row
+  if (isCurrentWeek && isOwnRow) {
+    if (!pick?.contestant_id) {
       return (
-        <td className={cellBase}>
-          <div className="flex flex-col gap-1 p-2 rounded-md border-2 border-[#F97316] bg-orange-50">
-            <div className="flex items-center gap-1.5 min-w-0">
-              {tribe && <TribeDot color={tribe.color} />}
-              <span className="text-sm font-medium text-gray-900 truncate">
-                {contestant?.name ?? '?'}
-              </span>
-            </div>
-            <span className="text-xs text-[#F97316] font-medium">Your pick</span>
-          </div>
+        <td className={`${cellBase} bg-[#F3F4F6]`}>
+          <div className="flex items-center justify-center text-gray-400">—</div>
         </td>
       )
     }
-    // Other player's current week — always show lock
+    const contestant = contestantMap[pick.contestant_id]
+    const tribe = getTribeAtWeek(pick.contestant_id, week.week_number, historyByContestant, tribeMap)
     return (
-      <td className={`${cellBase} bg-[#F3F4F6]`}>
-        <div className="flex items-center justify-center text-gray-400 gap-1.5">
-          <Lock className="w-4 h-4" />
+      <td className={cellBase}>
+        <div className="flex flex-col gap-1 p-2 rounded-md border-2 border-[#F97316] bg-orange-50">
+          <div className="flex items-center gap-1.5 min-w-0">
+            {tribe && <TribeDot color={tribe.color} />}
+            <span className="text-sm font-medium text-gray-900 truncate">
+              {contestant?.name ?? '?'}
+            </span>
+          </div>
+          <span className="text-xs text-[#F97316] font-medium">Your pick</span>
         </div>
       </td>
     )
@@ -301,6 +359,27 @@ export default function PicksHistoryPage() {
   // Displayed current week number for the subtitle (latest week with any data)
   const latestWeekNumber = weeks.length > 0 ? weeks[weeks.length - 1].week_number : 0
 
+  // ── Compute available contestants per user (for locked cell popovers) ──────
+  // allPicks contains resolved-week picks for other users (server-filtered), so
+  // usedByUserId accurately reflects what each player has already spent.
+  const usedByUserId: Record<string, Set<string>> = {}
+  for (const pick of allPicks) {
+    if (pick.contestant_id) {
+      if (!usedByUserId[pick.user_id]) usedByUserId[pick.user_id] = new Set()
+      usedByUserId[pick.user_id].add(pick.contestant_id)
+    }
+  }
+  const activeContestants = contestants
+    .filter((c) => !c.is_eliminated)
+    .sort((a, b) => a.name.localeCompare(b.name))
+
+  const availableByUserId: Record<string, Contestant[]> = {}
+  for (const user of sortedUsers) {
+    const used = usedByUserId[user.id] ?? new Set<string>()
+    availableByUserId[user.id] = activeContestants.filter((c) => !used.has(c.id))
+  }
+  // ─────────────────────────────────────────────────────────────────────────
+
   const frozenHeaderClass =
     'sticky left-0 z-20 bg-gray-50 shadow-[2px_0_4px_rgba(0,0,0,0.08)]'
   const frozenCellClass = (isElim: boolean) =>
@@ -393,6 +472,7 @@ export default function PicksHistoryPage() {
                       ) : (
                         sortedUsers.map((u) => {
                           const isElim = u.status === 'eliminated'
+                          const isOwnRow = u.id === currentUserId
                           return (
                             <tr
                               key={u.id}
@@ -422,12 +502,27 @@ export default function PicksHistoryPage() {
                                   currentWeekNumber !== null &&
                                   week.week_number > currentWeekNumber
                                 const pick = pickMap[u.id]?.[week.id]
+
+                                // Locked cell: current week, other player → show popover on hover
+                                if (isCurrent && !isOwnRow) {
+                                  return (
+                                    <LockedPickCell
+                                      key={week.id}
+                                      userName={u.name}
+                                      availableContestants={availableByUserId[u.id] ?? []}
+                                      currentWeekNumber={currentWeekEntry?.week_number ?? 0}
+                                      historyByContestant={historyByContestant}
+                                      tribeMap={tribeMap}
+                                    />
+                                  )
+                                }
+
                                 return (
                                   <PickCell
                                     key={week.id}
                                     week={week}
                                     pick={pick}
-                                    isOwnRow={u.id === currentUserId}
+                                    isOwnRow={isOwnRow}
                                     isCurrentWeek={isCurrent}
                                     isFutureWeek={isFuture}
                                     contestantMap={contestantMap}
@@ -471,7 +566,7 @@ export default function PicksHistoryPage() {
                     <div className="w-6 h-6 rounded bg-[#F3F4F6] flex items-center justify-center shrink-0">
                       <Lock className="w-3 h-3 text-gray-400" />
                     </div>
-                    <span className="text-gray-600">Pending reveal</span>
+                    <span className="text-gray-600">Pending reveal (hover to see available picks)</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 rounded border-2 border-[#F97316] bg-orange-50 shrink-0" />
