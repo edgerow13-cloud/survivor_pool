@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import { RulesBackLink } from './RulesBackLink'
 
 export default function RulesPage() {
   return (
@@ -9,12 +9,7 @@ export default function RulesPage() {
       <div className="max-w-2xl mx-auto px-4 py-10 sm:py-14">
         {/* Header */}
         <div className="mb-10">
-          <Link
-            href="/"
-            className="text-sm text-[#F97316] hover:text-orange-600 transition-colors mb-4 inline-block"
-          >
-            ← Back
-          </Link>
+          <RulesBackLink />
           <h1 className="text-3xl font-bold text-gray-900">Pool Rules</h1>
           <p className="mt-2 text-gray-500">Survivor 50 — Season 50 All Stars</p>
         </div>
