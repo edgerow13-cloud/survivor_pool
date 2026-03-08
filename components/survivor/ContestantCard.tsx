@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { Check, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { PickMode } from '@/app/pool/PickForm'
@@ -13,6 +14,7 @@ interface ContestantCardProps {
   usedWeek: number | null
   isSelected: boolean
   mode: PickMode
+  photoUrl?: string | null
   onSelect: (id: string) => void
 }
 
@@ -25,6 +27,7 @@ export function ContestantCard({
   usedWeek,
   isSelected,
   mode,
+  photoUrl,
   onSelect,
 }: ContestantCardProps) {
   const isUsed = usedWeek !== null
@@ -70,14 +73,24 @@ export function ContestantCard({
         </div>
       )}
 
-      {/* Silhouette */}
+      {/* Photo or silhouette */}
       <div
         className={cn(
-          'w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center mt-4 mb-3',
-          isDisabled && 'bg-gray-300',
+          'w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center mt-4 mb-3 overflow-hidden shrink-0',
+          isDisabled && !photoUrl && 'bg-gray-300',
         )}
       >
-        <User className="w-8 h-8 text-gray-400" />
+        {photoUrl ? (
+          <Image
+            src={photoUrl}
+            alt={name}
+            width={64}
+            height={64}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <User className="w-8 h-8 text-gray-400" />
+        )}
       </div>
 
       {/* Name */}

@@ -36,6 +36,7 @@ export default async function ContestantsPage() {
       name: c.name,
       is_eliminated: c.is_eliminated,
       eliminated_week: c.eliminated_week,
+      photo_url: c.photo_url ?? null,
       tribe: tribe ? { id: tribe.id, name: tribe.name, color: tribe.color } : null,
     }
   })

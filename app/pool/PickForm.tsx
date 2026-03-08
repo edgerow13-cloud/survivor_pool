@@ -14,6 +14,7 @@ export interface ContestantOption {
   is_eliminated: boolean
   eliminated_week: number | null
   tribe: { name: string; color: string } | null
+  photo_url?: string | null
 }
 
 interface Props {
@@ -128,6 +129,7 @@ export default function PickForm({
               usedWeek={usedWeek}
               isSelected={selected === c.id}
               mode={mode}
+              photoUrl={c.photo_url}
               onSelect={handleSelect}
             />
           )

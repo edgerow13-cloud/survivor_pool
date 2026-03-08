@@ -15,6 +15,7 @@ export interface ContestantWithTribe {
   name: string
   is_eliminated: boolean
   eliminated_week: number | null
+  photo_url: string | null
   tribe: { id: string; name: string; color: string } | null
 }
 

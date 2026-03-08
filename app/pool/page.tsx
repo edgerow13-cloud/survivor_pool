@@ -170,6 +170,7 @@ export default function PoolPage() {
     is_eliminated: c.is_eliminated,
     eliminated_week: c.eliminated_week,
     tribe: getTribe(c.id),
+    photo_url: c.photo_url,
   }))
 
   const currentWeekElimIds = weekEliminations

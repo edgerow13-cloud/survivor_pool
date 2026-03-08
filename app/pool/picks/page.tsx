@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Lock, Check, X, Settings } from 'lucide-react'
+import Image from 'next/image'
 import { useAuth } from '@/lib/auth-context'
 import { Header } from '@/components/Header'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -210,7 +211,17 @@ function PickCell({
     return (
       <td className={cellBase}>
         <div className="flex items-center gap-1.5 p-2 rounded-md bg-[#DCFCE7] min-w-0">
-          {tribe && <TribeDot color={tribe.color} />}
+          {contestant?.photo_url ? (
+            <Image
+              src={contestant.photo_url}
+              alt={contestant.name}
+              width={24}
+              height={24}
+              className="rounded-full object-cover shrink-0"
+            />
+          ) : tribe ? (
+            <TribeDot color={tribe.color} />
+          ) : null}
           <span className="text-sm font-medium text-[#16A34A] truncate flex-1">
             {contestant?.name ?? '?'}
           </span>
@@ -227,7 +238,17 @@ function PickCell({
     return (
       <td className={cellBase}>
         <div className="flex items-center gap-1.5 p-2 rounded-md bg-[#FEE2E2] min-w-0">
-          {tribe && <TribeDot color={tribe.color} />}
+          {contestant?.photo_url ? (
+            <Image
+              src={contestant.photo_url}
+              alt={contestant.name}
+              width={24}
+              height={24}
+              className="rounded-full object-cover shrink-0"
+            />
+          ) : tribe ? (
+            <TribeDot color={tribe.color} />
+          ) : null}
           <span className="text-sm font-medium text-[#DC2626] truncate flex-1">
             {contestant?.name ?? '?'}
           </span>
