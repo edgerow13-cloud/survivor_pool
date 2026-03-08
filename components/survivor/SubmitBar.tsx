@@ -1,11 +1,12 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
+import type { PickMode } from '@/app/pool/PickForm'
 
 interface SubmitBarProps {
   selectedName: string | null
   selectedTribeName: string | null
-  isSubmitted: boolean
+  mode: PickMode
   isLoading: boolean
   onSubmit: () => void
   onChangePick: () => void
@@ -14,7 +15,7 @@ interface SubmitBarProps {
 export function SubmitBar({
   selectedName,
   selectedTribeName,
-  isSubmitted,
+  mode,
   isLoading,
   onSubmit,
   onChangePick,
@@ -23,7 +24,17 @@ export function SubmitBar({
     <div className="bg-white border-t border-gray-200 p-4">
       <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
         <div className="text-center sm:text-left">
-          {selectedName ? (
+          {mode === 'locked' ? (
+            <p className="text-sm text-gray-500 font-medium">Picks are locked for this week</p>
+          ) : mode === 'submitted' && selectedName ? (
+            <p className="text-sm text-gray-700">
+              <span className="font-semibold">{selectedName}</span>
+              {selectedTribeName && (
+                <span className="text-gray-500"> ({selectedTribeName})</span>
+              )}
+              <span className="text-[#16A34A] font-medium"> ✓</span>
+            </p>
+          ) : selectedName ? (
             <p className="text-sm text-gray-700">
               <span className="text-gray-500">Your pick:</span>{' '}
               <span className="font-semibold">{selectedName}</span>
@@ -36,7 +47,7 @@ export function SubmitBar({
           )}
         </div>
 
-        {isSubmitted ? (
+        {mode === 'submitted' ? (
           <Button
             variant="outline"
             onClick={onChangePick}
@@ -44,7 +55,7 @@ export function SubmitBar({
           >
             Change Pick
           </Button>
-        ) : (
+        ) : mode === 'selecting' ? (
           <Button
             onClick={onSubmit}
             disabled={!selectedName || isLoading}
@@ -52,7 +63,7 @@ export function SubmitBar({
           >
             {isLoading ? 'Submitting...' : selectedName ? 'Submit Pick' : 'Select a contestant'}
           </Button>
-        )}
+        ) : null}
       </div>
     </div>
   )

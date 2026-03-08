@@ -2,6 +2,7 @@
 
 import { Check, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import type { PickMode } from '@/app/pool/PickForm'
 
 interface ContestantCardProps {
   id: string
@@ -11,7 +12,7 @@ interface ContestantCardProps {
   eliminatedWeek: number | null
   usedWeek: number | null
   isSelected: boolean
-  isSubmitted: boolean
+  mode: PickMode
   onSelect: (id: string) => void
 }
 
@@ -23,27 +24,37 @@ export function ContestantCard({
   eliminatedWeek,
   usedWeek,
   isSelected,
-  isSubmitted,
+  mode,
   onSelect,
 }: ContestantCardProps) {
   const isUsed = usedWeek !== null
   const isDisabled = isUsed || isEliminated
 
+  // In submitted/locked mode, non-selected cards are dimmed and non-interactive
+  const isNonInteractive = (mode === 'submitted' || mode === 'locked') && !isSelected
+  const isLockedIn = isSelected && mode === 'submitted'
+
   return (
     <button
       type="button"
-      onClick={() => !isDisabled && !isSubmitted && onSelect(id)}
-      disabled={isDisabled || isSubmitted}
+      onClick={() => !isDisabled && mode === 'selecting' && onSelect(id)}
+      disabled={isDisabled || mode !== 'selecting'}
       className={cn(
         'relative flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-200 w-full',
-        !isSelected && !isDisabled && 'bg-white border-gray-200 hover:shadow-lg hover:-translate-y-1',
-        isSelected && !isSubmitted && 'bg-orange-50 border-[#F97316] border-[3px] shadow-md',
-        isSelected && isSubmitted && 'bg-green-50 border-[#16A34A] border-[3px]',
+        // Normal selectable state
+        !isSelected && !isDisabled && mode === 'selecting' && 'bg-white border-gray-200 hover:shadow-lg hover:-translate-y-1',
+        // Selected but not yet submitted (orange)
+        isSelected && mode === 'selecting' && 'bg-orange-50 border-[#F97316] border-[3px] shadow-md',
+        // Submitted pick (green locked-in)
+        isLockedIn && 'bg-green-50 border-[#16A34A] border-[3px]',
+        // Disabled (used or eliminated)
         isDisabled && 'bg-gray-100 border-gray-200 opacity-60 cursor-not-allowed',
+        // Non-selected cards in submitted/locked mode: dimmed and non-clickable
+        isNonInteractive && !isDisabled && 'bg-white border-gray-200 opacity-40 pointer-events-none',
       )}
     >
-      {/* Selected checkmark (not yet submitted) */}
-      {isSelected && !isSubmitted && (
+      {/* Selected checkmark (selecting mode only) */}
+      {isSelected && mode === 'selecting' && (
         <div className="absolute top-2 left-2 w-6 h-6 bg-[#F97316] rounded-full flex items-center justify-center">
           <Check className="w-4 h-4 text-white" />
         </div>
@@ -93,7 +104,7 @@ export function ContestantCard({
       )}
 
       {/* Locked in banner */}
-      {isSelected && isSubmitted && (
+      {isLockedIn && (
         <div className="absolute bottom-0 left-0 right-0 bg-[#16A34A] text-white text-xs font-medium py-1.5 rounded-b-lg flex items-center justify-center gap-1">
           <Check className="w-3 h-3" />
           Locked in

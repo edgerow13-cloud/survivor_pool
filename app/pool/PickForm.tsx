@@ -6,6 +6,8 @@ import { ContestantCard } from '@/components/survivor/ContestantCard'
 import { SubmitBar } from '@/components/survivor/SubmitBar'
 import { SuccessAlert } from '@/components/survivor/SuccessAlert'
 
+export type PickMode = 'selecting' | 'submitted' | 'locked'
+
 export interface ContestantOption {
   id: string
   name: string
@@ -22,6 +24,7 @@ interface Props {
   contestants: ContestantOption[]
   usedContestantIds: string[]
   usedContestantWeekMap: Record<string, number>
+  isLocked?: boolean
   onPickSaved: () => void
 }
 
@@ -33,11 +36,19 @@ export default function PickForm({
   contestants,
   usedContestantIds,
   usedContestantWeekMap,
+  isLocked = false,
   onPickSaved,
 }: Props) {
   const router = useRouter()
+
+  const initialMode: PickMode = isLocked
+    ? 'locked'
+    : currentContestantId !== null
+      ? 'submitted'
+      : 'selecting'
+
+  const [mode, setMode] = useState<PickMode>(initialMode)
   const [selected, setSelected] = useState<string | null>(currentContestantId)
-  const [isSubmitted, setIsSubmitted] = useState(currentContestantId !== null)
   const [showSuccessAlert, setShowSuccessAlert] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -45,8 +56,13 @@ export default function PickForm({
   const usedSet = new Set(usedContestantIds)
   const selectedContestant = selected ? contestants.find((c) => c.id === selected) ?? null : null
 
+  function handleSelect(id: string) {
+    if (mode !== 'selecting') return
+    setSelected((prev) => (prev === id ? null : id))
+  }
+
   async function handleSubmit() {
-    if (!selected) return
+    if (!selected || mode !== 'selecting') return
     setLoading(true)
     setError(null)
     try {
@@ -59,7 +75,7 @@ export default function PickForm({
         const body = await res.json() as { error?: string }
         setError(body.error ?? 'Something went wrong. Please try again.')
       } else {
-        setIsSubmitted(true)
+        setMode('submitted')
         setShowSuccessAlert(true)
         onPickSaved()
         router.refresh()
@@ -72,7 +88,7 @@ export default function PickForm({
   }
 
   function handleChangePick() {
-    setIsSubmitted(false)
+    setMode('selecting')
     setShowSuccessAlert(false)
   }
 
@@ -111,8 +127,8 @@ export default function PickForm({
               eliminatedWeek={c.eliminated_week}
               usedWeek={usedWeek}
               isSelected={selected === c.id}
-              isSubmitted={isSubmitted && selected === c.id}
-              onSelect={setSelected}
+              mode={mode}
+              onSelect={handleSelect}
             />
           )
         })}
@@ -123,7 +139,7 @@ export default function PickForm({
         <SubmitBar
           selectedName={selectedContestant?.name ?? null}
           selectedTribeName={selectedContestant?.tribe?.name ?? null}
-          isSubmitted={isSubmitted}
+          mode={mode}
           isLoading={loading}
           onSubmit={handleSubmit}
           onChangePick={handleChangePick}
@@ -135,7 +151,7 @@ export default function PickForm({
         <SubmitBar
           selectedName={selectedContestant?.name ?? null}
           selectedTribeName={selectedContestant?.tribe?.name ?? null}
-          isSubmitted={isSubmitted}
+          mode={mode}
           isLoading={loading}
           onSubmit={handleSubmit}
           onChangePick={handleChangePick}
