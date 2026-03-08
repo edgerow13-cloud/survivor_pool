@@ -1,10 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 
 export default function LoginForm() {
-  const router = useRouter()
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -31,7 +29,7 @@ export default function LoginForm() {
       sessionStorage.setItem('pool_userId', data.userId!)
       sessionStorage.setItem('pool_name', data.name!)
       sessionStorage.setItem('pool_role', data.role!)
-      router.push('/pool')
+      window.location.href = '/pool'
     } catch {
       setError('Network error. Please try again.')
     } finally {
