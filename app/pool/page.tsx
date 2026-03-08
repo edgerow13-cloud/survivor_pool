@@ -129,7 +129,8 @@ export default function PoolPage() {
 
   const { me, contestants, tribes, tribeHistory, weeks, userPick, usedContestantIds, weekAllPicks, allUsers } = data
 
-  const currentWeek = weeks.length > 0 ? weeks[0] : null
+  // First unresolved week
+  const currentWeek = weeks.find((w: Week) => !w.is_results_entered) ?? null
 
   // Build tribe lookup
   const tribeMap = Object.fromEntries(tribes.map((t: Tribe) => [t.id, t]))

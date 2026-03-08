@@ -29,11 +29,12 @@ export async function POST(request: NextRequest) {
     getAdminClient().from('contestants').select('*').order('name'),
     getAdminClient().from('tribes').select('*'),
     getAdminClient().from('contestant_tribe_history').select('*'),
-    getAdminClient().from('weeks').select('*').order('week_number', { ascending: false }),
+    getAdminClient().from('weeks').select('*').order('week_number', { ascending: true }),
     getAdminClient().from('users').select('*').order('name'),
   ])
 
-  const currentWeek = weeks && weeks.length > 0 ? weeks[0] : null
+  // Current week = first unresolved week (ascending order)
+  const currentWeek = weeks ? (weeks.find((w) => !w.is_results_entered) ?? null) : null
 
   const [{ data: userPickData }, { data: usedPicksData }, { data: weekAllPicksData }] =
     await Promise.all([

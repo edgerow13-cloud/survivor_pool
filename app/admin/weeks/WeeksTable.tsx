@@ -76,7 +76,7 @@ export default function WeeksTable({
 
   function openEditDialog(week: Week) {
     setEditingWeek(week)
-    setEditContestant(week.eliminated_contestant_id ?? '')
+    setEditContestant(week.eliminated_contestant_id ?? 'none')
     setEditError(null)
   }
 
@@ -91,7 +91,7 @@ export default function WeeksTable({
         body: JSON.stringify({
           userId,
           week_id: editingWeek.id,
-          eliminated_contestant_id: editContestant || null,
+          eliminated_contestant_id: editContestant === 'none' ? null : (editContestant || null),
         }),
       })
       if (!res.ok) {
@@ -243,7 +243,7 @@ export default function WeeksTable({
                 <SelectValue placeholder="— No elimination —" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">— No elimination —</SelectItem>
+                <SelectItem value="none">— No elimination —</SelectItem>
                 {editableContestants.map((c) => (
                   <SelectItem key={c.id} value={c.id}>
                     {c.name}
