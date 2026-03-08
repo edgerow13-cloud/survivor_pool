@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Lock, Check, X, Settings } from 'lucide-react'
 import Image from 'next/image'
 import { useAuth } from '@/lib/auth-context'
@@ -10,6 +11,11 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import type { Contestant, Tribe, ContestantTribeHistory, Week, Pick, User, WeekElimination } from '@/types/database'
 
 const TOTAL_WEEKS = 13
+
+interface WinnerPickRow {
+  user_id: string
+  contestant_id: string
+}
 
 interface PicksHistoryData {
   weeks: Week[]
@@ -20,6 +26,8 @@ interface PicksHistoryData {
   tribes: Tribe[]
   currentUserId: string
   weekEliminations: WeekElimination[]
+  winnerPicks: WinnerPickRow[]
+  ep3Deadline: string | null
 }
 
 function formatMonDay(isoString: string): string {
@@ -53,6 +61,71 @@ function TribeDot({ color }: { color: string }) {
       className="inline-block w-2 h-2 rounded-full shrink-0"
       style={{ backgroundColor: color }}
     />
+  )
+}
+
+interface WinnerPickCellProps {
+  contestantId: string | null
+  isOwnRow: boolean
+  isPickLocked: boolean
+  contestantMap: Record<string, Contestant>
+  latestTribeByContestant: Record<string, Tribe>
+}
+
+function WinnerPickCell({
+  contestantId,
+  isOwnRow,
+  isPickLocked,
+  contestantMap,
+  latestTribeByContestant,
+}: WinnerPickCellProps) {
+  const cellBase = 'px-3 py-3 min-w-[150px] border-r border-gray-200'
+  const showChangeLink = isOwnRow && !isPickLocked
+
+  if (!contestantId) {
+    return (
+      <td className={`${cellBase} bg-[#F3F4F6]`}>
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-gray-400">—</span>
+          {showChangeLink && (
+            <Link href="/profile" className="text-xs text-[#F97316] hover:underline whitespace-nowrap">
+              Pick →
+            </Link>
+          )}
+        </div>
+      </td>
+    )
+  }
+
+  const contestant = contestantMap[contestantId]
+  const tribe = latestTribeByContestant[contestantId] ?? null
+  const isElim = contestant?.is_eliminated ?? false
+  const elimWeek = contestant?.eliminated_week ?? null
+  const hasBottomRow = (isElim && elimWeek !== null) || showChangeLink
+
+  return (
+    <td className={cellBase}>
+      <div className="flex flex-col gap-0.5 min-w-0">
+        <div className="flex items-center gap-1.5 min-w-0">
+          {tribe && <TribeDot color={tribe.color} />}
+          <span className={`text-sm font-medium truncate ${isElim ? 'text-gray-500' : 'text-gray-900'}`}>
+            {contestant?.name ?? '?'}
+          </span>
+        </div>
+        {hasBottomRow && (
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs font-medium text-[#DC2626]">
+              {isElim && elimWeek !== null ? `Out Wk ${elimWeek}` : ''}
+            </span>
+            {showChangeLink && (
+              <Link href="/profile" className="text-xs text-[#F97316] hover:underline whitespace-nowrap">
+                Change →
+              </Link>
+            )}
+          </div>
+        )}
+      </div>
+    </td>
   )
 }
 
@@ -333,7 +406,7 @@ export default function PicksHistoryPage() {
 
   if (!data) return null
 
-  const { weeks, allUsers, allPicks, contestants, tribeHistory, tribes, currentUserId, weekEliminations } = data
+  const { weeks, allUsers, allPicks, contestants, tribeHistory, tribes, currentUserId, weekEliminations, winnerPicks, ep3Deadline } = data
 
   const tribeMap: Record<string, Tribe> = Object.fromEntries(tribes.map((t) => [t.id, t]))
   const contestantMap: Record<string, Contestant> = Object.fromEntries(
@@ -401,6 +474,25 @@ export default function PicksHistoryPage() {
   }
   // ─────────────────────────────────────────────────────────────────────────
 
+  // Winner picks lookup: userId → contestantId
+  const winnerPickByUserId: Record<string, string> = {}
+  for (const wp of winnerPicks) {
+    winnerPickByUserId[wp.user_id] = wp.contestant_id
+  }
+
+  // Latest tribe per contestant (for the winner pick column — current tribe, not week-specific)
+  const latestTribeByContestant: Record<string, Tribe> = {}
+  for (const [contestantId, history] of Object.entries(historyByContestant)) {
+    const latest = history[history.length - 1]
+    if (latest) {
+      const tribe = tribeMap[latest.tribe_id]
+      if (tribe) latestTribeByContestant[contestantId] = tribe
+    }
+  }
+
+  // Episode 3 deadline determines whether winner pick is editable
+  const isPickLocked = ep3Deadline !== null && new Date() >= new Date(ep3Deadline)
+
   const frozenHeaderClass =
     'sticky left-0 z-20 bg-gray-50 shadow-[2px_0_4px_rgba(0,0,0,0.08)]'
   const frozenCellClass = (isElim: boolean) =>
@@ -437,6 +529,10 @@ export default function PicksHistoryPage() {
                           className={`${frozenHeaderClass} px-4 py-3 text-left text-sm font-semibold text-gray-900 border-r border-gray-200 min-w-[150px]`}
                         >
                           Player
+                        </th>
+                        {/* Winner pick column header */}
+                        <th className="px-3 py-3 text-center text-sm font-semibold min-w-[150px] border-r border-gray-200 text-gray-900 bg-gray-50">
+                          🏆 Winner Pick
                         </th>
                         {weeks.map((week) => {
                           const isCurrent = week.id === currentWeekEntry?.id
@@ -484,7 +580,7 @@ export default function PicksHistoryPage() {
                       {sortedUsers.length === 0 ? (
                         <tr>
                           <td
-                            colSpan={weeks.length + 1}
+                            colSpan={weeks.length + 2}
                             className="py-8 text-center text-gray-400 text-sm"
                           >
                             No players yet.
@@ -516,6 +612,14 @@ export default function PicksHistoryPage() {
                                   )}
                                 </div>
                               </td>
+                              {/* Winner pick cell */}
+                              <WinnerPickCell
+                                contestantId={winnerPickByUserId[u.id] ?? null}
+                                isOwnRow={isOwnRow}
+                                isPickLocked={isPickLocked}
+                                contestantMap={contestantMap}
+                                latestTribeByContestant={latestTribeByContestant}
+                              />
                               {/* Pick cells */}
                               {weeks.map((week) => {
                                 const isCurrent = week.id === currentWeekEntry?.id

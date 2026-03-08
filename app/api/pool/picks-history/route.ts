@@ -27,6 +27,8 @@ export async function POST(request: NextRequest) {
     { data: tribeHistory },
     { data: tribes },
     { data: weekEliminations },
+    { data: winnerPicksRaw },
+    { data: ep3Week },
   ] = await Promise.all([
     getAdminClient().from('weeks').select('*').order('week_number', { ascending: true }),
     getAdminClient().from('users').select('*').order('name'),
@@ -35,6 +37,8 @@ export async function POST(request: NextRequest) {
     getAdminClient().from('contestant_tribe_history').select('*'),
     getAdminClient().from('tribes').select('*'),
     getAdminClient().from('week_eliminations').select('*'),
+    getAdminClient().from('winner_picks').select('user_id, contestant_id'),
+    getAdminClient().from('weeks').select('episode_date').eq('week_number', 3).maybeSingle(),
   ])
 
   // Filter picks: for weeks not yet resolved, only return the requesting user's own pick
@@ -54,5 +58,7 @@ export async function POST(request: NextRequest) {
     tribes: tribes ?? [],
     currentUserId: userId,
     weekEliminations: weekEliminations ?? [],
+    winnerPicks: winnerPicksRaw ?? [],
+    ep3Deadline: ep3Week?.episode_date ?? null,
   })
 }
