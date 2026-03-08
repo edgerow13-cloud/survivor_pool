@@ -17,6 +17,12 @@ export default function HomePage() {
           >
             Log In
           </Link>
+          <Link
+            href="/rules"
+            className="block w-full py-2.5 px-4 rounded-lg border border-gray-200 text-gray-600 font-medium text-sm hover:bg-gray-50 transition-colors"
+          >
+            Pool Rules
+          </Link>
           <p className="text-xs text-gray-400">
             Contact Eddie to get access.
           </p>

@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Users, User } from 'lucide-react'
+import { Users, User, ScrollText } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 
 interface NavLink {
@@ -38,6 +38,13 @@ export function Header({ navLink }: { navLink?: NavLink }) {
           >
             <User className="w-4 h-4" />
             <span className="hidden sm:inline">Profile</span>
+          </Link>
+          <Link
+            href="/rules"
+            className="flex items-center gap-1.5 text-sm font-medium text-[#F97316] hover:text-orange-600 transition-colors"
+          >
+            <ScrollText className="w-4 h-4" />
+            <span className="hidden sm:inline">Rules</span>
           </Link>
           <div className="flex items-center gap-3">
             <span className="text-sm font-medium text-gray-700">{name}</span>
