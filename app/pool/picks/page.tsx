@@ -83,6 +83,17 @@ function WinnerPickCell({
   const cellBase = 'px-3 py-3 min-w-[150px] border-r border-gray-200'
   const showChangeLink = isOwnRow && !isPickLocked
 
+  // Before Ep3 deadline: hide other players' picks entirely
+  if (!isPickLocked && !isOwnRow) {
+    return (
+      <td className={`${cellBase} bg-[#F3F4F6]`}>
+        <div className="flex items-center justify-center text-gray-400 gap-1.5">
+          <Lock className="w-4 h-4" />
+        </div>
+      </td>
+    )
+  }
+
   if (!contestantId) {
     return (
       <td className={`${cellBase} bg-[#F3F4F6]`}>

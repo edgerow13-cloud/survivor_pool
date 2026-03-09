@@ -49,6 +49,14 @@ export async function POST(request: NextRequest) {
     (p) => resolvedWeekIds.has(p.week_id) || p.user_id === userId
   )
 
+  // Filter winner picks: hide other players' picks until the Ep3 deadline has passed
+  const ep3DeadlinePassed = ep3Week?.episode_date
+    ? new Date() >= new Date(ep3Week.episode_date)
+    : false
+  const filteredWinnerPicks = ep3DeadlinePassed
+    ? (winnerPicksRaw ?? [])
+    : (winnerPicksRaw ?? []).filter((wp) => wp.user_id === userId)
+
   return NextResponse.json({
     weeks: weeks ?? [],
     allUsers: allUsers ?? [],
@@ -58,7 +66,7 @@ export async function POST(request: NextRequest) {
     tribes: tribes ?? [],
     currentUserId: userId,
     weekEliminations: weekEliminations ?? [],
-    winnerPicks: winnerPicksRaw ?? [],
+    winnerPicks: filteredWinnerPicks,
     ep3Deadline: ep3Week?.episode_date ?? null,
   })
 }
