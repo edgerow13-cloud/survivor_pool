@@ -1,0 +1,65 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { requireCommissioner } from '@/lib/require-commissioner'
+import { getAdminClient } from '@/lib/supabase/admin'
+import { sendEmail } from '@/lib/email'
+
+type Recipients = 'active' | 'all'
+
+export async function POST(request: NextRequest) {
+  const body = await request.json() as {
+    userId?: string
+    subject?: string
+    body?: string
+    recipients?: Recipients
+  }
+
+  const auth = await requireCommissioner(body.userId)
+  if (auth instanceof NextResponse) return auth
+
+  const { subject, body: emailBody, recipients } = body
+
+  if (!subject || typeof subject !== 'string' || subject.trim() === '') {
+    return NextResponse.json({ error: 'Subject is required' }, { status: 400 })
+  }
+  if (!emailBody || typeof emailBody !== 'string' || emailBody.trim() === '') {
+    return NextResponse.json({ error: 'Body is required' }, { status: 400 })
+  }
+  if (recipients !== 'active' && recipients !== 'all') {
+    return NextResponse.json({ error: 'Invalid recipients value' }, { status: 400 })
+  }
+
+  const db = getAdminClient()
+  let query = db.from('users').select('email, name').neq('status', 'inactive')
+
+  if (recipients === 'active') {
+    query = query.eq('status', 'active')
+  } else {
+    query = query.in('status', ['active', 'eliminated'])
+  }
+
+  const { data: users, error } = await query
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  const emails = (users ?? []).map((u: { email: string }) => u.email)
+
+  if (emails.length === 0) {
+    return NextResponse.json({ sent: 0 })
+  }
+
+  // Convert plain text body to HTML paragraphs
+  const html = emailBody
+    .split('\n\n')
+    .map((p) => `<p>${p.replace(/\n/g, '<br />')}</p>`)
+    .join('')
+
+  const { error: sendError } = await sendEmail(emails, subject.trim(), html)
+
+  if (sendError) {
+    return NextResponse.json({ error: String(sendError) }, { status: 500 })
+  }
+
+  return NextResponse.json({ sent: emails.length })
+}

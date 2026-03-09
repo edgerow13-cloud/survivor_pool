@@ -3,13 +3,14 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { LayoutDashboard, Users, Calendar, Trophy } from 'lucide-react'
+import { LayoutDashboard, Users, Calendar, Trophy, Mail } from 'lucide-react'
 
 const navItems = [
   { href: '/admin', label: 'Overview', icon: LayoutDashboard },
   { href: '/admin/players', label: 'Players', icon: Users },
   { href: '/admin/weeks', label: 'Weeks & Results', icon: Calendar },
   { href: '/admin/contestants', label: 'Contestants & Tribes', icon: Trophy },
+  { href: '/admin/email', label: 'Email', icon: Mail },
 ]
 
 export function AdminSidebar() {

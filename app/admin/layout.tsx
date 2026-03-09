@@ -12,6 +12,7 @@ const mobileNavLinks = [
   { href: '/admin/players', label: 'Players' },
   { href: '/admin/weeks', label: 'Weeks & Results' },
   { href: '/admin/contestants', label: 'Contestants & Tribes' },
+  { href: '/admin/email', label: 'Email' },
 ]
 
 function Spinner() {
