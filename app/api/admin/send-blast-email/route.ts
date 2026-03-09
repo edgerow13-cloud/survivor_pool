@@ -58,7 +58,8 @@ export async function POST(request: NextRequest) {
   const { error: sendError } = await sendEmail(emails, subject.trim(), html)
 
   if (sendError) {
-    return NextResponse.json({ error: String(sendError) }, { status: 500 })
+    const msg = sendError instanceof Error ? sendError.message : (sendError as { message?: string }).message ?? JSON.stringify(sendError)
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 
   return NextResponse.json({ sent: emails.length })
