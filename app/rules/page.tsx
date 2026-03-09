@@ -24,6 +24,10 @@ export default function RulesPage() {
             </h2>
             <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
               <Rule>
+                The buy-in is <strong>$10 per player</strong>, collected by the commissioner
+                before the Episode 3 deadline. Winner takes the pot.
+              </Rule>
+              <Rule>
                 Each week, every active pool participant picks one Survivor castaway they think
                 will survive that episode.
               </Rule>

@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/auth-context'
 import { Header } from '@/components/Header'
 import { CountdownTimer } from '@/components/survivor/CountdownTimer'
 import PickForm from './PickForm'
-import type { Contestant, Tribe, ContestantTribeHistory, Week, Pick, User, WeekElimination } from '@/types/database'
+import type { Contestant, Tribe, ContestantTribeHistory, Week, Pick, User, WeekElimination, WinnerPick } from '@/types/database'
 
 interface PoolData {
   me: User
@@ -20,6 +20,7 @@ interface PoolData {
   weekAllPicks: Pick[]
   allUsers: User[]
   weekEliminations: WeekElimination[]
+  winnerPick: WinnerPick | null
 }
 
 function formatDeadline(isoString: string) {
@@ -129,7 +130,7 @@ export default function PoolPage() {
 
   if (!data) return null
 
-  const { me, contestants, tribes, tribeHistory, weeks, userPick, usedContestantIds, usedPicks, weekAllPicks, allUsers, weekEliminations } = data
+  const { me, contestants, tribes, tribeHistory, weeks, userPick, usedContestantIds, usedPicks, weekAllPicks, allUsers, weekEliminations, winnerPick } = data
 
   // First unresolved week
   const currentWeek = weeks.find((w: Week) => !w.is_results_entered) ?? null
@@ -155,6 +156,11 @@ export default function PoolPage() {
   }
 
   const contestantMap = Object.fromEntries(contestants.map((c: Contestant) => [c.id, c]))
+
+  // Show winner pick banner if: active player, no winner pick submitted, Ep3 deadline not yet passed
+  const ep3Week = weeks.find((w: Week) => w.week_number === 3) ?? null
+  const ep3DeadlinePassed = ep3Week ? Date.now() >= new Date(ep3Week.episode_date).getTime() : false
+  const showWinnerPickBanner = me.status === 'active' && !winnerPick && !ep3DeadlinePassed
 
   // Map contestant ID → week number it was previously picked (for "Used Wk N" display)
   const weekIdToNumber = Object.fromEntries(weeks.map((w: Week) => [w.id, w.week_number]))
@@ -205,6 +211,22 @@ export default function PoolPage() {
   const deadline = new Date(currentWeek.episode_date)
   const isDeadlinePassed = Date.now() >= deadline.getTime()
 
+  const winnerPickBanner = showWinnerPickBanner ? (
+    <div className="bg-orange-50 border border-orange-200 rounded-lg px-4 py-3 flex items-start gap-3">
+      <span className="text-orange-500 text-lg leading-none mt-0.5">!</span>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-orange-800">Submit your winner pick before Episode 3</p>
+        <p className="text-sm text-orange-700 mt-0.5">
+          Every player must predict who will win Survivor 50. This locks at the Episode 3 deadline
+          and is used as a tiebreaker.{' '}
+          <a href="/profile" className="underline font-medium hover:text-orange-900">
+            Go to your profile to submit →
+          </a>
+        </p>
+      </div>
+    </div>
+  ) : null
+
   // ── Results entered ──────────────────────────────────────────────────────────
   if (currentWeek.is_results_entered) {
     return (
@@ -212,6 +234,7 @@ export default function PoolPage() {
         <Header />
         <main className="flex-1">
           <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
+            {winnerPickBanner}
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
                 Week {currentWeek.week_number} — Results
@@ -309,6 +332,7 @@ export default function PoolPage() {
         <Header />
         <main className="flex-1">
           <div className="max-w-2xl mx-auto px-4 py-8 space-y-4">
+            {winnerPickBanner}
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
                 Week {currentWeek.week_number} — Picks are locked
@@ -344,6 +368,8 @@ export default function PoolPage() {
 
       <main className="flex-1 pb-24 md:pb-8">
         <div className="max-w-6xl mx-auto px-4 py-6">
+          {winnerPickBanner && <div className="mb-6">{winnerPickBanner}</div>}
+
           {/* Title & countdown */}
           <div className="text-center mb-8">
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">

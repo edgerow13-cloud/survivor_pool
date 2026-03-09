@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
   // Current week = first unresolved week (ascending order)
   const currentWeek = weeks ? (weeks.find((w) => !w.is_results_entered) ?? null) : null
 
-  const [{ data: userPickData }, { data: usedPicksData }, { data: weekAllPicksData }] =
+  const [{ data: userPickData }, { data: usedPicksData }, { data: weekAllPicksData }, { data: winnerPickData }] =
     await Promise.all([
       currentWeek
         ? getAdminClient()
@@ -59,6 +59,7 @@ export async function POST(request: NextRequest) {
       currentWeek && currentWeek.is_results_entered
         ? getAdminClient().from('picks').select('*').eq('week_id', currentWeek.id)
         : Promise.resolve({ data: [], error: null }),
+      getAdminClient().from('winner_picks').select('*').eq('user_id', userId).maybeSingle(),
     ])
 
   const usedPicksTyped = (usedPicksData ?? []) as Array<{ contestant_id: string | null; week_id: string }>
@@ -80,5 +81,6 @@ export async function POST(request: NextRequest) {
     weekAllPicks: weekAllPicksData ?? [],
     allUsers: allUsers ?? [],
     weekEliminations: weekEliminations ?? [],
+    winnerPick: winnerPickData ?? null,
   })
 }
