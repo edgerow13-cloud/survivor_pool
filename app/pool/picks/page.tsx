@@ -462,6 +462,10 @@ export default function PicksHistoryPage() {
   // The "current" week is the first unresolved week (weeks are sorted ascending)
   const currentWeekEntry = weeks.find((w) => !w.is_results_entered)
   const currentWeekNumber = currentWeekEntry?.week_number ?? null
+
+  function isWeekEffectivelyLocked(week: Week): boolean {
+    return week.is_locked || new Date() >= new Date(week.episode_date)
+  }
   // Displayed current week number for the subtitle (latest week with any data)
   const latestWeekNumber = weeks.length > 0 ? weeks[weeks.length - 1].week_number : 0
 
@@ -647,8 +651,8 @@ export default function PicksHistoryPage() {
                                   week.week_number > currentWeekNumber
                                 const pick = pickMap[u.id]?.[week.id]
 
-                                // Locked cell: current week, other player → show popover on hover
-                                if (isCurrent && !isOwnRow) {
+                                // Locked cell: current week not yet locked, other player → show popover on hover
+                                if (isCurrent && !isOwnRow && !isWeekEffectivelyLocked(week)) {
                                   return (
                                     <LockedPickCell
                                       key={week.id}

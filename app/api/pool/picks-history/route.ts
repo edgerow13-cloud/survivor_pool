@@ -41,12 +41,16 @@ export async function POST(request: NextRequest) {
     getAdminClient().from('weeks').select('episode_date').eq('week_number', 3).maybeSingle(),
   ])
 
-  // Filter picks: for weeks not yet resolved, only return the requesting user's own pick
-  const resolvedWeekIds = new Set(
-    (weeks ?? []).filter((w) => w.is_results_entered).map((w) => w.id)
+  // Filter picks: show other players' picks once week is effectively locked
+  // (deadline passed OR manually locked OR results entered)
+  const now = new Date()
+  const visibleWeekIds = new Set(
+    (weeks ?? []).filter(
+      (w) => w.is_results_entered || w.is_locked || new Date(w.episode_date) <= now
+    ).map((w) => w.id)
   )
   const filteredPicks = (allPicks ?? []).filter(
-    (p) => resolvedWeekIds.has(p.week_id) || p.user_id === userId
+    (p) => visibleWeekIds.has(p.week_id) || p.user_id === userId
   )
 
   // Filter winner picks: hide other players' picks until the Ep3 deadline has passed

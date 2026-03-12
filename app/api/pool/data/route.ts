@@ -56,7 +56,11 @@ export async function POST(request: NextRequest) {
             .neq('week_id', currentWeek.id)
             .not('contestant_id', 'is', null)
         : Promise.resolve({ data: [], error: null }),
-      currentWeek && currentWeek.is_results_entered
+      currentWeek && (
+        currentWeek.is_results_entered ||
+        currentWeek.is_locked ||
+        new Date(currentWeek.episode_date as string) <= new Date()
+      )
         ? getAdminClient().from('picks').select('*').eq('week_id', currentWeek.id)
         : Promise.resolve({ data: [], error: null }),
       getAdminClient().from('winner_picks').select('*').eq('user_id', userId).maybeSingle(),
