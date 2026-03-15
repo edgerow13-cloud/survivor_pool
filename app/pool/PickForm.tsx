@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Calendar, Ban } from 'lucide-react'
 import { ContestantCard } from '@/components/survivor/ContestantCard'
 import { SubmitBar } from '@/components/survivor/SubmitBar'
 import { SuccessAlert } from '@/components/survivor/SuccessAlert'
@@ -113,9 +114,13 @@ export default function PickForm({
         </div>
       )}
 
-      {/* Contestant card grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {contestants.map((c) => {
+      {/* Contestant sections */}
+      {(() => {
+        const available = contestants.filter((c) => !c.is_eliminated && !(usedSet.has(c.id) && c.id !== currentContestantId))
+        const alreadyPicked = contestants.filter((c) => !c.is_eliminated && usedSet.has(c.id) && c.id !== currentContestantId)
+        const eliminated = contestants.filter((c) => c.is_eliminated)
+
+        function renderCard(c: typeof contestants[number]) {
           const isUsed = usedSet.has(c.id) && c.id !== currentContestantId
           const usedWeek = isUsed ? (usedContestantWeekMap[c.id] ?? null) : null
           return (
@@ -133,8 +138,43 @@ export default function PickForm({
               onSelect={handleSelect}
             />
           )
-        })}
-      </div>
+        }
+
+        return (
+          <>
+            {/* Available */}
+            <div className="flex flex-col gap-2 md:grid md:grid-cols-3 lg:grid-cols-4 md:gap-4">
+              {available.map(renderCard)}
+            </div>
+
+            {/* Already Picked */}
+            {alreadyPicked.length > 0 && (
+              <>
+                <div className="flex items-center gap-2 mt-8 mb-4">
+                  <Calendar className="h-4 w-4 text-gray-400" />
+                  <p className="text-sm font-medium text-gray-500">Already Picked ({alreadyPicked.length})</p>
+                </div>
+                <div className="flex flex-col gap-2 md:grid md:grid-cols-3 lg:grid-cols-4 md:gap-4 opacity-60">
+                  {alreadyPicked.map(renderCard)}
+                </div>
+              </>
+            )}
+
+            {/* Eliminated */}
+            {eliminated.length > 0 && (
+              <>
+                <div className="flex items-center gap-2 mt-8 mb-4">
+                  <Ban className="h-4 w-4 text-gray-400" />
+                  <p className="text-sm font-medium text-gray-500">Eliminated ({eliminated.length})</p>
+                </div>
+                <div className="flex flex-col gap-2 md:grid md:grid-cols-3 lg:grid-cols-4 md:gap-4 opacity-40">
+                  {eliminated.map(renderCard)}
+                </div>
+              </>
+            )}
+          </>
+        )
+      })()}
 
       {/* Desktop sticky submit bar */}
       <div className="hidden md:block sticky bottom-0 mt-8 -mx-4 sm:-mx-6 md:-mx-8">
@@ -149,7 +189,7 @@ export default function PickForm({
       </div>
 
       {/* Mobile fixed submit bar */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40">
+      <div className="md:hidden fixed bottom-16 left-0 right-0 z-40">
         <SubmitBar
           selectedName={selectedContestant?.name ?? null}
           selectedTribeName={selectedContestant?.tribe?.name ?? null}

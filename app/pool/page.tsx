@@ -366,7 +366,7 @@ export default function PoolPage() {
     <div className="min-h-screen bg-[#F9FAFB] flex flex-col">
       <Header />
 
-      <main className="flex-1 pb-24 md:pb-8">
+      <main className="flex-1 pb-36 md:pb-8">
         <div className="max-w-6xl mx-auto px-4 py-6">
           {winnerPickBanner && <div className="mb-6">{winnerPickBanner}</div>}
 

@@ -255,7 +255,7 @@ export default function ProfilePage() {
     : null
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gray-50 flex flex-col pb-20 md:pb-0">
       <Header />
       <main className="flex-1">
         <div className="max-w-lg mx-auto px-4 py-8 space-y-6">

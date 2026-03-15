@@ -43,7 +43,7 @@ export function ContestantCard({
       onClick={() => !isDisabled && mode === 'selecting' && onSelect(id)}
       disabled={isDisabled || mode !== 'selecting'}
       className={cn(
-        'relative flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-200 w-full',
+        'relative flex flex-row items-center gap-3 p-3 md:flex-col md:items-center md:gap-0 md:p-4 rounded-xl border-2 transition-all duration-200 w-full',
         // Normal selectable state
         !isSelected && !isDisabled && mode === 'selecting' && 'bg-white border-gray-200 hover:shadow-lg hover:-translate-y-1',
         // Selected but not yet submitted (orange)
@@ -56,17 +56,17 @@ export function ContestantCard({
         isNonInteractive && !isDisabled && 'bg-white border-gray-200 opacity-40 pointer-events-none',
       )}
     >
-      {/* Selected checkmark (selecting mode only) */}
+      {/* Selected checkmark — desktop only (selecting mode only) */}
       {isSelected && mode === 'selecting' && (
-        <div className="absolute top-2 left-2 w-6 h-6 bg-[#F97316] rounded-full flex items-center justify-center">
+        <div className="hidden md:flex absolute top-2 left-2 w-6 h-6 bg-[#F97316] rounded-full items-center justify-center">
           <Check className="w-4 h-4 text-white" />
         </div>
       )}
 
-      {/* Tribe badge */}
+      {/* Tribe badge — desktop only */}
       {tribe && (
         <div
-          className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-xs font-medium text-white"
+          className="hidden md:block absolute top-2 right-2 px-2 py-0.5 rounded-full text-xs font-medium text-white"
           style={{ backgroundColor: tribe.color }}
         >
           {tribe.name}
@@ -76,7 +76,7 @@ export function ContestantCard({
       {/* Photo or silhouette */}
       <div
         className={cn(
-          'w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center mt-4 mb-3 overflow-hidden shrink-0',
+          'w-14 h-14 md:w-16 md:h-16 rounded-full bg-gray-200 flex items-center justify-center md:mt-4 md:mb-3 overflow-hidden shrink-0',
           isDisabled && !photoUrl && 'bg-gray-300',
         )}
       >
@@ -93,28 +93,47 @@ export function ContestantCard({
         )}
       </div>
 
-      {/* Name */}
-      <span
-        className={cn(
-          'text-sm font-semibold text-center text-gray-900',
-          isUsed && 'line-through text-gray-500',
-          isEliminated && !isUsed && 'text-gray-500',
-        )}
-      >
-        {name}
-      </span>
+      {/* Name + status — middle column on mobile, centered on desktop */}
+      <div className="flex-1 min-w-0 flex flex-col gap-0.5 md:items-center md:w-full">
+        <div className="flex items-center gap-1.5 min-w-0">
+          {/* Tribe dot — mobile only */}
+          {tribe && (
+            <span
+              className="md:hidden inline-block w-2.5 h-2.5 rounded-full shrink-0"
+              style={{ backgroundColor: tribe.color }}
+            />
+          )}
+          <span
+            className={cn(
+              'text-sm font-semibold text-gray-900 truncate md:text-center',
+              isUsed && 'line-through text-gray-500',
+              isEliminated && !isUsed && 'text-gray-500',
+            )}
+          >
+            {name}
+          </span>
+        </div>
 
-      {/* Status label */}
-      {isUsed && (
-        <span className="text-xs text-gray-500 mt-1">
-          {usedWeek ? `Used Wk ${usedWeek}` : 'Already picked'}
-        </span>
-      )}
-      {isEliminated && !isUsed && (
-        <span className="text-xs text-gray-500 mt-1">
-          {eliminatedWeek ? `Eliminated Wk ${eliminatedWeek}` : 'Eliminated'}
-        </span>
-      )}
+        {/* Status label */}
+        {isUsed && (
+          <span className="text-xs text-gray-500">
+            {usedWeek ? `Used Wk ${usedWeek}` : 'Already picked'}
+          </span>
+        )}
+        {isEliminated && !isUsed && (
+          <span className="text-xs text-gray-500">
+            {eliminatedWeek ? `Eliminated Wk ${eliminatedWeek}` : 'Eliminated'}
+          </span>
+        )}
+      </div>
+
+      {/* Mobile selection circle — right side indicator, hidden on desktop */}
+      <div className={cn(
+        'md:hidden ml-auto shrink-0 flex h-6 w-6 items-center justify-center rounded-full border-2 transition-colors',
+        isSelected ? 'border-[#F97316] bg-[#F97316]' : 'border-gray-300',
+      )}>
+        {isSelected && <Check className="h-4 w-4 text-white" />}
+      </div>
 
       {/* Locked in banner */}
       {isLockedIn && (

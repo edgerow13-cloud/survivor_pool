@@ -515,7 +515,7 @@ export default function PicksHistoryPage() {
     `sticky left-0 z-10 ${isElim ? 'bg-gray-100' : 'bg-white'} shadow-[2px_0_4px_rgba(0,0,0,0.08)]`
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] flex flex-col">
+    <div className="min-h-screen bg-[#F9FAFB] flex flex-col pb-20 md:pb-0">
       <Header navLink={{ href: '/pool', label: 'Player Selection', shortLabel: 'Pick' }} />
 
       <main className="flex-1">
@@ -535,7 +535,7 @@ export default function PicksHistoryPage() {
           ) : (
             <>
               {/* Table */}
-              <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse text-sm">
                     <thead>
