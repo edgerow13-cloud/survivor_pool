@@ -3,21 +3,53 @@
 import { useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
 
-interface Props {
-  activeCount: number
-  totalCount: number
+interface User {
+  id: string
+  name: string
+  email: string
+  status: string
 }
 
-export function BlastEmailForm({ activeCount, totalCount }: Props) {
+interface Props {
+  users: User[]
+  activeCount: number
+}
+
+export function BlastEmailForm({ users, activeCount }: Props) {
   const { userId } = useAuth()
   const [subject, setSubject] = useState('')
   const [body, setBody] = useState('')
-  const [recipients, setRecipients] = useState<'active' | 'all'>('active')
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle')
   const [resultMsg, setResultMsg] = useState('')
 
+  const activeUsers = users.filter((u) => u.status === 'active')
+  const eliminatedUsers = users.filter((u) => u.status === 'eliminated')
+
+  function toggleUser(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  function selectActive() {
+    setSelectedIds(new Set(activeUsers.map((u) => u.id)))
+  }
+
+  function selectAll() {
+    setSelectedIds(new Set(users.map((u) => u.id)))
+  }
+
+  function deselectAll() {
+    setSelectedIds(new Set())
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (selectedIds.size === 0) return
     setStatus('sending')
     setResultMsg('')
 
@@ -25,7 +57,7 @@ export function BlastEmailForm({ activeCount, totalCount }: Props) {
       const res = await fetch('/api/admin/send-blast-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, subject, body, recipients }),
+        body: JSON.stringify({ userId, subject, body, userIds: [...selectedIds] }),
       })
       const data = await res.json() as { sent?: number; error?: string }
       if (!res.ok) {
@@ -41,44 +73,74 @@ export function BlastEmailForm({ activeCount, totalCount }: Props) {
     }
   }
 
-  const recipientCount = recipients === 'active' ? activeCount : totalCount
+  const sel = selectedIds.size
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6">
       <h2 className="text-lg font-semibold text-gray-900 mb-4">Blast Email</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Recipients
-          </label>
-          <div className="flex flex-col gap-2 sm:flex-row sm:gap-6">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name="recipients"
-                value="active"
-                checked={recipients === 'active'}
-                onChange={() => setRecipients('active')}
-                className="accent-orange-500"
-              />
-              <span className="text-sm text-gray-700">
-                Active players only ({activeCount})
-              </span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name="recipients"
-                value="all"
-                checked={recipients === 'all'}
-                onChange={() => setRecipients('all')}
-                className="accent-orange-500"
-              />
-              <span className="text-sm text-gray-700">
-                All players — active + eliminated ({totalCount})
-              </span>
-            </label>
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-sm font-medium text-gray-700">Recipients</label>
+            <div className="flex gap-2 text-xs">
+              <button type="button" onClick={selectActive} className="text-orange-600 hover:underline">
+                Select active ({activeCount})
+              </button>
+              <span className="text-gray-300">|</span>
+              <button type="button" onClick={selectAll} className="text-orange-600 hover:underline">
+                Select all ({users.length})
+              </button>
+              <span className="text-gray-300">|</span>
+              <button type="button" onClick={deselectAll} className="text-gray-500 hover:underline">
+                Deselect all
+              </button>
+            </div>
           </div>
+
+          <div className="border border-gray-200 rounded-md overflow-y-auto max-h-72">
+            {activeUsers.length > 0 && (
+              <>
+                <div className="px-3 py-1.5 bg-gray-50 text-xs font-medium text-gray-500 uppercase tracking-wide border-b border-gray-200">
+                  Active
+                </div>
+                {activeUsers.map((u) => (
+                  <label key={u.id} className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(u.id)}
+                      onChange={() => toggleUser(u.id)}
+                      className="accent-orange-500"
+                    />
+                    <span className="text-sm text-gray-800">{u.name}</span>
+                    <span className="text-xs text-gray-400 ml-auto">{u.email}</span>
+                  </label>
+                ))}
+              </>
+            )}
+            {eliminatedUsers.length > 0 && (
+              <>
+                <div className="px-3 py-1.5 bg-gray-50 text-xs font-medium text-gray-500 uppercase tracking-wide border-b border-gray-200 border-t border-gray-200">
+                  Eliminated
+                </div>
+                {eliminatedUsers.map((u) => (
+                  <label key={u.id} className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(u.id)}
+                      onChange={() => toggleUser(u.id)}
+                      className="accent-orange-500"
+                    />
+                    <span className="text-sm text-gray-500 line-through">{u.name}</span>
+                    <span className="text-xs text-gray-400 ml-auto">{u.email}</span>
+                  </label>
+                ))}
+              </>
+            )}
+          </div>
+
+          <p className="mt-1 text-xs text-gray-500">
+            {sel} of {users.length} player{users.length === 1 ? '' : 's'} selected
+          </p>
         </div>
 
         <div>
@@ -115,10 +177,10 @@ export function BlastEmailForm({ activeCount, totalCount }: Props) {
         <div className="flex items-center gap-4">
           <button
             type="submit"
-            disabled={status === 'sending'}
+            disabled={status === 'sending' || sel === 0}
             className="rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white hover:bg-orange-600 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
           >
-            {status === 'sending' ? 'Sending…' : `Send to ${recipientCount} player${recipientCount === 1 ? '' : 's'}`}
+            {status === 'sending' ? 'Sending…' : `Send to ${sel} player${sel === 1 ? '' : 's'}`}
           </button>
 
           {resultMsg && (

@@ -8,7 +8,7 @@ export default async function EmailPage() {
   const db = getAdminClient()
 
   const [{ data: users }, { data: openWeek }] = await Promise.all([
-    db.from('users').select('id, status').in('status', ['active', 'eliminated']),
+    db.from('users').select('id, name, email, status').in('status', ['active', 'eliminated']).order('name', { ascending: true }),
     db
       .from('weeks')
       .select('id, week_number')
@@ -20,7 +20,6 @@ export default async function EmailPage() {
 
   const allUsers = users ?? []
   const activeCount = allUsers.filter((u) => u.status === 'active').length
-  const totalCount = allUsers.length
 
   let unpickedCount = 0
   let weekNumber: number | null = null
@@ -56,7 +55,7 @@ export default async function EmailPage() {
         hasOpenWeek={hasOpenWeek}
       />
 
-      <BlastEmailForm activeCount={activeCount} totalCount={totalCount} />
+      <BlastEmailForm users={allUsers} activeCount={activeCount} />
     </div>
   )
 }
