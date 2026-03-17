@@ -167,7 +167,7 @@ function LockedPickCell({
   tribeMap,
 }: LockedPickCellProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const cellBase = 'px-3 py-3 min-w-[140px] border-r border-gray-200'
+  const cellBase = 'px-3 py-3 min-w-[90px] border-r border-gray-200'
 
   return (
     <td
@@ -240,7 +240,7 @@ function PickCell({
   historyByContestant,
   tribeMap,
 }: CellProps) {
-  const cellBase = 'px-3 py-3 min-w-[140px] border-r border-gray-200'
+  const cellBase = 'px-3 py-3 min-w-[90px] border-r border-gray-200'
 
   // Future week — dashed empty cell
   if (isFutureWeek) {
@@ -510,9 +510,9 @@ export default function PicksHistoryPage() {
   const isPickLocked = ep3Deadline !== null && new Date() >= new Date(ep3Deadline)
 
   const frozenHeaderClass =
-    'sticky left-0 z-20 bg-gray-50 shadow-[2px_0_4px_rgba(0,0,0,0.08)]'
+    "sticky left-0 z-20 bg-gray-50 relative after:content-[''] after:absolute after:inset-y-0 after:right-0 after:w-5 after:bg-gradient-to-r after:from-gray-50 after:to-[rgba(255,255,255,0)] after:pointer-events-none"
   const frozenCellClass = (isElim: boolean) =>
-    `sticky left-0 z-10 ${isElim ? 'bg-gray-100' : 'bg-white'} shadow-[2px_0_4px_rgba(0,0,0,0.08)]`
+    `sticky left-0 z-10 relative ${isElim ? 'bg-gray-100' : 'bg-white'} after:content-[''] after:absolute after:inset-y-0 after:right-0 after:w-5 after:bg-gradient-to-r ${isElim ? 'after:from-gray-100' : 'after:from-white'} after:to-[rgba(255,255,255,0)] after:pointer-events-none`
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] flex flex-col pb-20 md:pb-0">
@@ -563,7 +563,7 @@ export default function PicksHistoryPage() {
                           return (
                             <th
                               key={week.id}
-                              className={`px-3 py-3 text-center text-sm font-semibold min-w-[140px] border-r border-gray-200 ${
+                              className={`px-3 py-3 text-center text-sm font-semibold min-w-[90px] border-r border-gray-200 ${
                                 isCurrent
                                   ? 'bg-[#F97316] text-white'
                                   : isFuture
