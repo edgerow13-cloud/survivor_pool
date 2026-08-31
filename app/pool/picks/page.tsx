@@ -13,8 +13,6 @@ import { UserAvatar } from '@/components/UserAvatar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import type { Contestant, Tribe, ContestantTribeHistory, Week, Pick, User, WeekElimination } from '@/types/database'
 
-const TOTAL_WEEKS = 13
-
 interface WinnerPickRow {
   user_id: string
   contestant_id: string
@@ -471,8 +469,10 @@ export default function PicksHistoryPage() {
   function isWeekEffectivelyLocked(week: Week): boolean {
     return week.is_locked || new Date() >= new Date(week.episode_date)
   }
-  // Displayed current week number for the subtitle (latest week with any data)
+  // Displayed week number for the subtitle: the active pickable week, or —
+  // once every week is resolved — the last one (season over).
   const latestWeekNumber = weeks.length > 0 ? weeks[weeks.length - 1].week_number : 0
+  const displayWeekNumber = currentWeekNumber ?? latestWeekNumber
 
   // ── Compute available contestants per user (for locked cell popovers) ──────
   // allPicks contains resolved-week picks for other users (server-filtered), so
@@ -532,7 +532,7 @@ export default function PicksHistoryPage() {
             </span>
             <h1 className="font-display text-2xl font-bold text-foreground mt-1">Pick History</h1>
             <p className="text-muted-foreground mt-1">
-              Week {latestWeekNumber} of ~{TOTAL_WEEKS}
+              Week {displayWeekNumber} of {weeks.length}
             </p>
           </div>
 
