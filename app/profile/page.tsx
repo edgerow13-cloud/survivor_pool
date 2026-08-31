@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Check, ChevronDown, Upload } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
+import { useActiveSeason } from '@/hooks/use-active-season'
 import { Header } from '@/components/Header'
 import { UserAvatar } from '@/components/UserAvatar'
 import { Button } from '@/components/ui/button'
@@ -49,6 +50,8 @@ function TribeDot({ color }: { color: string }) {
 
 export default function ProfilePage() {
   const { userId, isLoading, updateName } = useAuth()
+  const season = useActiveSeason()
+  const seasonLabel = season ? `Season ${season.seasonNumber}` : 'the season'
   const router = useRouter()
 
   const [profileData, setProfileData] = useState<ProfileData | null>(null)
@@ -262,7 +265,7 @@ export default function ProfilePage() {
           <div>
             <span className="eyebrow">Your profile</span>
             <h1 className="font-display text-2xl font-bold text-foreground mt-1">
-              Keep it current.
+              Your Profile
             </h1>
           </div>
 
@@ -359,8 +362,8 @@ export default function ProfilePage() {
                 {isPickLocked
                   ? 'The pick window has closed. Your prediction is locked in.'
                   : deadlineLabel
-                    ? `Pick who you think will win Survivor 50. Locks when Episode 3 airs on ${deadlineLabel}.`
-                    : 'Pick who you think will win Survivor 50.'}
+                    ? `Pick who you think will win ${seasonLabel}. Locks when Episode 3 airs on ${deadlineLabel}.`
+                    : `Pick who you think will win ${seasonLabel}.`}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">

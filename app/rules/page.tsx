@@ -1,6 +1,16 @@
+import { getAdminClient } from '@/lib/supabase/admin'
 import { RulesBackLink } from './RulesBackLink'
 
-export default function RulesPage() {
+export const dynamic = 'force-dynamic'
+
+export default async function RulesPage() {
+  const db = getAdminClient()
+  const { data: season } = await db
+    .from('seasons')
+    .select('season_number, name')
+    .eq('is_active', true)
+    .maybeSingle()
+
   return (
     <div className="min-h-screen bg-background">
       {/* Orange accent bar */}
@@ -10,9 +20,11 @@ export default function RulesPage() {
         {/* Header */}
         <div className="mb-10">
           <RulesBackLink />
-          <span className="eyebrow">Season 50</span>
+          <span className="eyebrow">
+            {season ? `Season ${season.season_number}` : 'Pool Rules'}
+          </span>
           <h1 className="font-display text-3xl font-bold text-foreground mt-1">Pool Rules</h1>
-          <p className="mt-2 text-muted-foreground">Survivor 50 — Season 50 All Stars</p>
+          <p className="mt-2 text-muted-foreground">{season?.name ?? 'Private Survivor pool'}</p>
         </div>
 
         <div className="space-y-8">
@@ -125,7 +137,8 @@ export default function RulesPage() {
             <div className="bg-card rounded-xl border border-border divide-y divide-border">
               <Rule label="Pregame prediction required">
                 Before the Episode 3 deadline, every player must submit a pregame prediction for
-                who they think will win Survivor 50. This is your &ldquo;winner pick.&rdquo;
+                who they think will win {season ? `Season ${season.season_number}` : 'the season'}.
+                This is your &ldquo;winner pick.&rdquo;
               </Rule>
               <Rule label="Winner picks are public">
                 Your winner pick is visible to all players immediately upon submission — it&apos;s

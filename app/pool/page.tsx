@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
+import { useActiveSeason } from '@/hooks/use-active-season'
 import { Header } from '@/components/Header'
 import { CountdownTimer } from '@/components/survivor/CountdownTimer'
 import PickForm from './PickForm'
@@ -74,6 +75,8 @@ function Spinner() {
 
 export default function PoolPage() {
   const { userId, isLoading } = useAuth()
+  const season = useActiveSeason()
+  const seasonLabel = season ? `Season ${season.seasonNumber}` : 'the season'
   const router = useRouter()
   const [data, setData] = useState<PoolData | null>(null)
   const [fetchError, setFetchError] = useState<string | null>(null)
@@ -217,8 +220,8 @@ export default function PoolPage() {
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-foreground">Submit your winner pick before Episode 3</p>
         <p className="text-sm text-foreground/80 mt-0.5">
-          Every player must predict who will win Survivor 50. This locks at the Episode 3 deadline
-          and is used as a tiebreaker.{' '}
+          Every player must predict who will win {seasonLabel}. This locks at the Episode 3
+          deadline and is used as a tiebreaker.{' '}
           <a href="/profile" className="underline font-medium text-primary hover:text-primary/80">
             Go to your profile to submit →
           </a>

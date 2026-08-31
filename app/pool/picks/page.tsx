@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { Lock, Check, X, Settings } from 'lucide-react'
 import Image from 'next/image'
 import { useAuth } from '@/lib/auth-context'
+import { useActiveSeason } from '@/hooks/use-active-season'
 import { Header } from '@/components/Header'
 import { UserAvatar } from '@/components/UserAvatar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -374,6 +375,7 @@ function PickCell({
 
 export default function PicksHistoryPage() {
   const { userId, isLoading } = useAuth()
+  const season = useActiveSeason()
   const router = useRouter()
   const [data, setData] = useState<PicksHistoryData | null>(null)
   const [fetchError, setFetchError] = useState<string | null>(null)
@@ -522,7 +524,9 @@ export default function PicksHistoryPage() {
         <div className="max-w-full mx-auto px-4 py-6">
           {/* Page title */}
           <div className="mb-6">
-            <span className="eyebrow">Season 50 · Live board</span>
+            <span className="eyebrow">
+              {season ? `Season ${season.seasonNumber} · Live board` : 'Live board'}
+            </span>
             <h1 className="font-display text-2xl font-bold text-foreground mt-1">Pick History</h1>
             <p className="text-muted-foreground mt-1">
               Week {latestWeekNumber} of ~{TOTAL_WEEKS}

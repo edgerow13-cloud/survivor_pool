@@ -22,7 +22,7 @@ function buildReminderHtml(name: string, weekNumber: number, deadline: string): 
   const poolUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://pool.eddiegerow.com'
   return `
 <p>Hey ${name},</p>
-<p>Don't forget to submit your Survivor 50 pool pick for <strong>Week ${weekNumber}</strong>!</p>
+<p>Don't forget to submit your Outlast pool pick for <strong>Week ${weekNumber}</strong>!</p>
 <p><strong>Deadline:</strong> ${deadlineStr}</p>
 <p><a href="${poolUrl}/pool">👉 ${poolUrl}/pool</a></p>
 <p>Good luck,<br />Eddie</p>

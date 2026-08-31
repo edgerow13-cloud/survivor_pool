@@ -1,29 +1,48 @@
 import Link from 'next/link'
+import { getAdminClient } from '@/lib/supabase/admin'
 
-export default function HomePage() {
+export const dynamic = 'force-dynamic'
+
+export default async function HomePage() {
+  const db = getAdminClient()
+  const { data: season } = await db
+    .from('seasons')
+    .select('season_number')
+    .eq('is_active', true)
+    .maybeSingle()
+
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-md w-full max-w-sm p-8 text-center">
-        <h1 className="text-3xl font-bold text-orange-500 mb-1">Survivor Pool</h1>
-        <p className="text-sm text-gray-500 mb-6">Season 50 — All Stars</p>
-        <p className="text-gray-600 text-sm mb-8">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="bg-card rounded-2xl border border-border shadow-sm w-full max-w-sm p-8 text-center">
+        <div className="flex flex-col items-center gap-3 mb-6">
+          <span className="ink-panel flex h-12 w-12 items-center justify-center rounded-2xl">
+            <span className="font-display text-lg font-bold">O</span>
+          </span>
+          <div>
+            <h1 className="font-display text-2xl font-bold text-foreground">Outlast</h1>
+            <p className="eyebrow mt-1">
+              {season ? `Season ${season.season_number}` : 'Private pool'}
+            </p>
+          </div>
+        </div>
+        <p className="text-muted-foreground text-sm mb-8">
           Pick one castaway each week. If they get voted out, you&apos;re eliminated.
           Last player standing wins.
         </p>
         <div className="flex flex-col gap-3">
           <Link
             href="/login"
-            className="block w-full py-2.5 px-4 rounded-lg bg-orange-500 text-white font-semibold text-sm hover:bg-orange-600 transition-colors"
+            className="block w-full py-2.5 px-4 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors"
           >
             Log In
           </Link>
           <Link
             href="/rules"
-            className="block w-full py-2.5 px-4 rounded-lg border border-gray-200 text-gray-600 font-medium text-sm hover:bg-gray-50 transition-colors"
+            className="block w-full py-2.5 px-4 rounded-lg border border-border text-foreground font-medium text-sm hover:bg-muted transition-colors"
           >
             Pool Rules
           </Link>
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-muted-foreground">
             Contact Eddie to get access.
           </p>
         </div>
