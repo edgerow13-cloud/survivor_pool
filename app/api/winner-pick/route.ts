@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAdminClient } from '@/lib/supabase/admin'
+import { getActiveSeasonId } from '@/lib/get-active-season'
 
 // POST — upsert the authenticated user's season winner prediction
 export async function POST(request: NextRequest) {
@@ -27,10 +28,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'User not found' }, { status: 401 })
   }
 
+  let seasonId: string
+  try {
+    seasonId = await getActiveSeasonId(db)
+  } catch {
+    return NextResponse.json({ error: 'No active season is configured' }, { status: 500 })
+  }
+
   // Server-side deadline enforcement: look up Episode 3's air date
   const { data: ep3 } = await db
     .from('weeks')
     .select('episode_date')
+    .eq('season_id', seasonId)
     .eq('week_number', 3)
     .maybeSingle()
 
@@ -45,11 +54,12 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // Validate the contestant exists and is not eliminated
+  // Validate the contestant exists in the active season and is not eliminated
   const { data: contestant } = await db
     .from('contestants')
     .select('id, name, is_eliminated')
     .eq('id', contestantId)
+    .eq('season_id', seasonId)
     .single()
 
   if (!contestant) {
@@ -63,14 +73,15 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  // Upsert: insert or update on user_id conflict
+  // Upsert: insert or update on (user_id, season_id) conflict
   const { error } = await db.from('winner_picks').upsert(
     {
       user_id: userId,
+      season_id: seasonId,
       contestant_id: contestantId,
       updated_at: new Date().toISOString(),
     },
-    { onConflict: 'user_id' }
+    { onConflict: 'user_id,season_id' }
   )
 
   if (error) {

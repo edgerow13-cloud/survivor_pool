@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAdminClient } from '@/lib/supabase/admin'
+import { getActiveSeasonId } from '@/lib/get-active-season'
 
 export async function POST(request: NextRequest) {
   const body = await request.json() as { userId?: string }
@@ -9,7 +10,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { data: me } = await getAdminClient()
+  const db = getAdminClient()
+
+  const { data: me } = await db
     .from('users')
     .select('id, status, role')
     .eq('id', userId)
@@ -17,6 +20,13 @@ export async function POST(request: NextRequest) {
 
   if (!me || (me.status !== 'active' && me.status !== 'eliminated' && me.role !== 'commissioner')) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  let seasonId: string
+  try {
+    seasonId = await getActiveSeasonId(db)
+  } catch {
+    return NextResponse.json({ error: 'No active season is configured' }, { status: 500 })
   }
 
   const [
@@ -30,15 +40,15 @@ export async function POST(request: NextRequest) {
     { data: winnerPicksRaw },
     { data: ep3Week },
   ] = await Promise.all([
-    getAdminClient().from('weeks').select('*').order('week_number', { ascending: true }),
-    getAdminClient().from('users').select('*').order('name'),
-    getAdminClient().from('picks').select('*'),
-    getAdminClient().from('contestants').select('*'),
-    getAdminClient().from('contestant_tribe_history').select('*'),
-    getAdminClient().from('tribes').select('*'),
-    getAdminClient().from('week_eliminations').select('*'),
-    getAdminClient().from('winner_picks').select('user_id, contestant_id'),
-    getAdminClient().from('weeks').select('episode_date').eq('week_number', 3).maybeSingle(),
+    db.from('weeks').select('*').eq('season_id', seasonId).order('week_number', { ascending: true }),
+    db.from('users').select('*').order('name'),
+    db.from('picks').select('*'),
+    db.from('contestants').select('*').eq('season_id', seasonId),
+    db.from('contestant_tribe_history').select('*'),
+    db.from('tribes').select('*').eq('season_id', seasonId),
+    db.from('week_eliminations').select('*'),
+    db.from('winner_picks').select('user_id, contestant_id').eq('season_id', seasonId),
+    db.from('weeks').select('episode_date').eq('season_id', seasonId).eq('week_number', 3).maybeSingle(),
   ])
 
   // Filter picks: show other players' picks once week is effectively locked

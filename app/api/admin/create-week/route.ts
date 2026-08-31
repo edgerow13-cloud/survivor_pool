@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireCommissioner } from '@/lib/require-commissioner'
 import { getAdminClient } from '@/lib/supabase/admin'
+import { getActiveSeasonId } from '@/lib/get-active-season'
 
 export async function POST(request: NextRequest) {
   const body = await request.json() as { userId?: string; week_number?: number; episode_date?: string }
@@ -16,7 +17,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid episode_date' }, { status: 400 })
   }
 
-  const { error } = await getAdminClient().from('weeks').insert({
+  const db = getAdminClient()
+  let seasonId: string
+  try {
+    seasonId = await getActiveSeasonId(db)
+  } catch {
+    return NextResponse.json({ error: 'No active season is configured' }, { status: 500 })
+  }
+
+  const { error } = await db.from('weeks').insert({
+    season_id: seasonId,
     week_number,
     episode_date,
     is_locked: false,

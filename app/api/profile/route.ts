@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAdminClient } from '@/lib/supabase/admin'
+import { getActiveSeasonId } from '@/lib/get-active-season'
 
 // POST — load profile page data
 export async function POST(request: NextRequest) {
@@ -22,6 +23,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'User not found' }, { status: 401 })
   }
 
+  let seasonId: string
+  try {
+    seasonId = await getActiveSeasonId(db)
+  } catch {
+    return NextResponse.json({ error: 'No active season is configured' }, { status: 500 })
+  }
+
   const [
     { data: contestantsRaw },
     { data: tribesRaw },
@@ -29,11 +37,11 @@ export async function POST(request: NextRequest) {
     { data: ep3Week },
     { data: winnerPick },
   ] = await Promise.all([
-    db.from('contestants').select('id, name, is_eliminated').eq('is_eliminated', false).order('name'),
-    db.from('tribes').select('id, name, color'),
+    db.from('contestants').select('id, name, is_eliminated').eq('season_id', seasonId).eq('is_eliminated', false).order('name'),
+    db.from('tribes').select('id, name, color').eq('season_id', seasonId),
     db.from('contestant_tribe_history').select('contestant_id, tribe_id, week_number'),
-    db.from('weeks').select('episode_date').eq('week_number', 3).maybeSingle(),
-    db.from('winner_picks').select('contestant_id').eq('user_id', userId).maybeSingle(),
+    db.from('weeks').select('episode_date').eq('season_id', seasonId).eq('week_number', 3).maybeSingle(),
+    db.from('winner_picks').select('contestant_id').eq('user_id', userId).eq('season_id', seasonId).maybeSingle(),
   ])
 
   // Build latest tribe per contestant

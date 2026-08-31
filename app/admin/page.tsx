@@ -1,4 +1,5 @@
 import { getAdminClient } from '@/lib/supabase/admin'
+import { getActiveSeasonId } from '@/lib/get-active-season'
 import { Card, CardContent } from '@/components/ui/card'
 import { WeekStatusCard, type PlayerPickStatus } from '@/components/admin/WeekStatusCard'
 import { QuickActionsCard } from '@/components/admin/QuickActionsCard'
@@ -17,27 +18,37 @@ function formatShortDate(isoString: string) {
 }
 
 export default async function AdminOverviewPage() {
+  const db = getAdminClient()
+  const seasonId = await getActiveSeasonId(db)
+
   const [
     { count: activeCount },
     { count: eliminatedCount },
+    { count: totalCastCount },
     { count: remainingCount },
     { data: weeksData },
   ] = await Promise.all([
-    getAdminClient()
+    db
       .from('users')
       .select('*', { count: 'exact', head: true })
       .eq('status', 'active'),
-    getAdminClient()
+    db
       .from('users')
       .select('*', { count: 'exact', head: true })
       .eq('status', 'eliminated'),
-    getAdminClient()
+    db
       .from('contestants')
       .select('*', { count: 'exact', head: true })
+      .eq('season_id', seasonId),
+    db
+      .from('contestants')
+      .select('*', { count: 'exact', head: true })
+      .eq('season_id', seasonId)
       .eq('is_eliminated', false),
-    getAdminClient()
+    db
       .from('weeks')
       .select('*')
+      .eq('season_id', seasonId)
       .eq('is_results_entered', false)
       .order('week_number', { ascending: true })
       .limit(1),
@@ -57,18 +68,18 @@ export default async function AdminOverviewPage() {
       { data: tribeHistoryRows },
       { data: tribes },
     ] = await Promise.all([
-      getAdminClient()
+      db
         .from('users')
         .select('id, name')
         .eq('status', 'active')
         .order('name'),
-      getAdminClient()
+      db
         .from('picks')
         .select('*')
         .eq('week_id', currentWeek.id),
-      getAdminClient().from('contestants').select('id, name'),
-      getAdminClient().from('contestant_tribe_history').select('*'),
-      getAdminClient().from('tribes').select('id, name, color'),
+      db.from('contestants').select('id, name').eq('season_id', seasonId),
+      db.from('contestant_tribe_history').select('*'),
+      db.from('tribes').select('id, name, color').eq('season_id', seasonId),
     ])
 
     const contestantMap = Object.fromEntries(
@@ -120,6 +131,7 @@ export default async function AdminOverviewPage() {
   const active = activeCount ?? 0
   const eliminated = eliminatedCount ?? 0
   const remaining = remainingCount ?? 0
+  const totalCast = totalCastCount ?? 0
   const unpicked = active - picksSubmittedCount
 
   const stats = [
@@ -136,7 +148,7 @@ export default async function AdminOverviewPage() {
     {
       title: 'Contestants Remaining',
       value: String(remaining),
-      subtitle: `${24 - remaining} eliminated from show`,
+      subtitle: `${totalCast - remaining} eliminated from show`,
     },
     {
       title: 'Picks Submitted',

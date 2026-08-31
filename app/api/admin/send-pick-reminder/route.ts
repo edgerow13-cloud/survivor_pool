@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireCommissioner } from '@/lib/require-commissioner'
 import { getAdminClient } from '@/lib/supabase/admin'
+import { getActiveSeasonId } from '@/lib/get-active-season'
 import { sendEmail } from '@/lib/email'
 
 function formatDeadline(dateStr: string): string {
@@ -35,11 +36,18 @@ export async function POST(request: NextRequest) {
   if (auth instanceof NextResponse) return auth
 
   const db = getAdminClient()
+  let seasonId: string
+  try {
+    seasonId = await getActiveSeasonId(db)
+  } catch {
+    return NextResponse.json({ error: 'No active season is configured' }, { status: 500 })
+  }
 
   // Find current open week (earliest not-yet-resolved week)
   const { data: openWeek, error: weekError } = await db
     .from('weeks')
     .select('id, week_number, episode_date')
+    .eq('season_id', seasonId)
     .eq('is_results_entered', false)
     .order('week_number', { ascending: true })
     .limit(1)

@@ -1,4 +1,5 @@
 import { getAdminClient } from '@/lib/supabase/admin'
+import { getActiveSeasonId } from '@/lib/get-active-season'
 import { BlastEmailForm } from './BlastEmailForm'
 import { PickReminderCard } from './PickReminderCard'
 
@@ -6,12 +7,14 @@ export const dynamic = 'force-dynamic'
 
 export default async function EmailPage() {
   const db = getAdminClient()
+  const seasonId = await getActiveSeasonId(db)
 
   const [{ data: users }, { data: openWeek }] = await Promise.all([
     db.from('users').select('id, name, email, status').in('status', ['active', 'eliminated']).order('name', { ascending: true }),
     db
       .from('weeks')
       .select('id, week_number')
+      .eq('season_id', seasonId)
       .eq('is_results_entered', false)
       .order('week_number', { ascending: true })
       .limit(1)

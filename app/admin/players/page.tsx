@@ -1,4 +1,5 @@
 import { getAdminClient } from '@/lib/supabase/admin'
+import { getActiveSeasonId } from '@/lib/get-active-season'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -42,22 +43,27 @@ function RoleBadge({ role }: { role: User['role'] }) {
 }
 
 export default async function PlayersPage() {
+  const db = getAdminClient()
+  const seasonId = await getActiveSeasonId(db)
+
   const [
     { data: users },
     { data: weeksData },
     { data: allContestantsData },
     { data: winnerPicksData },
   ] = await Promise.all([
-    getAdminClient().from('users').select('*').order('status').order('name'),
-    getAdminClient()
+    db.from('users').select('*').order('status').order('name'),
+    db
       .from('weeks')
       .select('id, week_number')
+      .eq('season_id', seasonId)
       .order('week_number', { ascending: true }),
-    getAdminClient()
+    db
       .from('contestants')
       .select('id, name, is_eliminated, eliminated_week')
+      .eq('season_id', seasonId)
       .order('name'),
-    getAdminClient().from('winner_picks').select('user_id, contestant_id'),
+    db.from('winner_picks').select('user_id, contestant_id').eq('season_id', seasonId),
   ])
 
   const typedUsers = (users ?? []) as User[]

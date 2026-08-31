@@ -1,15 +1,19 @@
 import { getAdminClient } from '@/lib/supabase/admin'
+import { getActiveSeasonId } from '@/lib/get-active-season'
 import ContestantsClient, { type ContestantWithTribe } from './ContestantsClient'
 import type { Tribe } from '@/types/database'
 
 export const dynamic = 'force-dynamic'
 
 export default async function ContestantsPage() {
+  const db = getAdminClient()
+  const seasonId = await getActiveSeasonId(db)
+
   const [{ data: contestantsRaw }, { data: tribesRaw }, { data: tribeHistory }] =
     await Promise.all([
-      getAdminClient().from('contestants').select('*').order('name'),
-      getAdminClient().from('tribes').select('*').order('name'),
-      getAdminClient().from('contestant_tribe_history').select('*'),
+      db.from('contestants').select('*').eq('season_id', seasonId).order('name'),
+      db.from('tribes').select('*').eq('season_id', seasonId).order('name'),
+      db.from('contestant_tribe_history').select('*'),
     ])
 
   const tribes = (tribesRaw ?? []) as Tribe[]

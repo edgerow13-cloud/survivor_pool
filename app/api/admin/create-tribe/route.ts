@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireCommissioner } from '@/lib/require-commissioner'
 import { getAdminClient } from '@/lib/supabase/admin'
+import { getActiveSeasonId } from '@/lib/get-active-season'
 
 export async function POST(request: NextRequest) {
   const body = await request.json() as { userId?: string; name?: string; color?: string; is_merged?: boolean }
@@ -19,7 +20,16 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const { error } = await getAdminClient().from('tribes').insert({
+  const db = getAdminClient()
+  let seasonId: string
+  try {
+    seasonId = await getActiveSeasonId(db)
+  } catch {
+    return NextResponse.json({ error: 'No active season is configured' }, { status: 500 })
+  }
+
+  const { error } = await db.from('tribes').insert({
+    season_id: seasonId,
     name: name.trim(),
     color,
     is_merged: is_merged ?? false,

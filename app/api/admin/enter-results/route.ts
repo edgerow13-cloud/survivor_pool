@@ -55,6 +55,7 @@ export async function POST(request: NextRequest) {
     const { error: resetContestantsError } = await getAdminClient()
       .from('contestants')
       .update({ is_eliminated: false, eliminated_week: null })
+      .eq('season_id', week.season_id)
       .eq('eliminated_week', week.week_number)
     if (resetContestantsError) {
       return NextResponse.json({ error: resetContestantsError.message }, { status: 500 })

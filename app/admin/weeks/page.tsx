@@ -1,4 +1,5 @@
 import { getAdminClient } from '@/lib/supabase/admin'
+import { getActiveSeasonId } from '@/lib/get-active-season'
 import WeekForm from './WeekForm'
 import CurrentWeekCard from './CurrentWeekCard'
 import WeeksTable from './WeeksTable'
@@ -7,6 +8,9 @@ import type { Week, Contestant, WeekElimination, User } from '@/types/database'
 export const dynamic = 'force-dynamic'
 
 export default async function WeeksPage() {
+  const db = getAdminClient()
+  const seasonId = await getActiveSeasonId(db)
+
   const [
     { data: weeksRaw },
     { data: contestantsRaw },
@@ -14,14 +18,14 @@ export default async function WeeksPage() {
     { data: weekEliminationsRaw },
     { data: allUsersRaw },
   ] = await Promise.all([
-    getAdminClient().from('weeks').select('*').order('week_number', { ascending: true }),
-    getAdminClient().from('contestants').select('*').order('name'),
-    getAdminClient()
+    db.from('weeks').select('*').eq('season_id', seasonId).order('week_number', { ascending: true }),
+    db.from('contestants').select('*').eq('season_id', seasonId).order('name'),
+    db
       .from('users')
       .select('*', { count: 'exact', head: true })
       .eq('status', 'active'),
-    getAdminClient().from('week_eliminations').select('*'),
-    getAdminClient().from('users').select('*').order('name'),
+    db.from('week_eliminations').select('*'),
+    db.from('users').select('*').order('name'),
   ])
 
   const weeks = (weeksRaw ?? []) as Week[]
@@ -40,7 +44,7 @@ export default async function WeeksPage() {
   // Fetch pick count for the current week
   let picksSubmitted = 0
   if (currentWeek) {
-    const { count } = await getAdminClient()
+    const { count } = await db
       .from('picks')
       .select('*', { count: 'exact', head: true })
       .eq('week_id', currentWeek.id)

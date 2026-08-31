@@ -2,6 +2,15 @@ export type UserRole = 'commissioner' | 'player'
 export type UserStatus = 'active' | 'eliminated' | 'pending_approval' | 'inactive'
 export type PickOutcome = 'safe' | 'eliminated' | 'no_pick'
 
+export interface Season {
+  id: string
+  season_number: number
+  name: string
+  premiere_date: string | null
+  is_active: boolean
+  created_at: string
+}
+
 export interface User {
   id: string
   name: string
@@ -15,6 +24,7 @@ export interface User {
 
 export interface Contestant {
   id: string
+  season_id: string
   name: string
   is_eliminated: boolean
   eliminated_week: number | null
@@ -24,6 +34,7 @@ export interface Contestant {
 
 export interface Tribe {
   id: string
+  season_id: string
   name: string
   color: string
   is_merged: boolean
@@ -40,6 +51,7 @@ export interface ContestantTribeHistory {
 
 export interface Week {
   id: string
+  season_id: string
   week_number: number
   episode_date: string
   is_locked: boolean

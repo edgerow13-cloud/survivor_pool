@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireCommissioner } from '@/lib/require-commissioner'
 import { getAdminClient } from '@/lib/supabase/admin'
+import { getActiveSeasonId } from '@/lib/get-active-season'
 
 /**
  * Commissioner-only winner pick upsert.
@@ -39,17 +40,25 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Player not found' }, { status: 404 })
   }
 
+  let seasonId: string
+  try {
+    seasonId = await getActiveSeasonId(db)
+  } catch {
+    return NextResponse.json({ error: 'No active season is configured' }, { status: 500 })
+  }
+
   // null contestantId = clear the pick
   if (!contestantId) {
-    await db.from('winner_picks').delete().eq('user_id', targetUserId)
+    await db.from('winner_picks').delete().eq('user_id', targetUserId).eq('season_id', seasonId)
     return NextResponse.json({ ok: true })
   }
 
-  // Validate contestant exists and is not eliminated
+  // Validate contestant exists in the active season and is not eliminated
   const { data: contestant } = await db
     .from('contestants')
     .select('id, name, is_eliminated')
     .eq('id', contestantId)
+    .eq('season_id', seasonId)
     .single()
 
   if (!contestant) {
@@ -66,10 +75,11 @@ export async function POST(request: NextRequest) {
   const { error } = await db.from('winner_picks').upsert(
     {
       user_id: targetUserId,
+      season_id: seasonId,
       contestant_id: contestantId,
       updated_at: new Date().toISOString(),
     },
-    { onConflict: 'user_id' }
+    { onConflict: 'user_id,season_id' }
   )
 
   if (error) {
