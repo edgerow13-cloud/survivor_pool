@@ -1,8 +1,12 @@
 'use client'
 
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { Users, User, ScrollText } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { useAuth } from '@/lib/auth-context'
+import { useActiveSeason } from '@/hooks/use-active-season'
+import { UserAvatar } from '@/components/UserAvatar'
 import { BottomTabBar } from '@/components/BottomTabBar'
 
 interface NavLink {
@@ -11,51 +15,66 @@ interface NavLink {
   shortLabel: string
 }
 
-const defaultNavLink: NavLink = { href: '/pool/picks', label: 'View Full Grid', shortLabel: 'Grid' }
+const defaultNavLink: NavLink = { href: '/pool/picks', label: 'Picks Grid', shortLabel: 'Grid' }
 
 export function Header({ navLink }: { navLink?: NavLink }) {
   const { name, logout } = useAuth()
+  const pathname = usePathname()
+  const season = useActiveSeason()
   const link = navLink ?? defaultNavLink
+
+  const navItems = [
+    { href: link.href, label: link.label, icon: Users },
+    { href: '/profile', label: 'Profile', icon: User },
+    { href: '/rules', label: 'Rules', icon: ScrollText },
+  ]
 
   return (
     <>
-      <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
-        <div className="h-1 bg-[#F97316]" />
-        <div className="flex items-center justify-between px-4 py-3 max-w-6xl mx-auto">
-          <Link href="/pool" className="text-xl font-bold text-gray-900 hover:text-gray-700 transition-colors">
-            Survivor 50 Pool
+      <header className="sticky top-0 z-50 border-b border-border bg-card/90 backdrop-blur">
+        <div className="flex items-center justify-between gap-4 px-4 py-3 max-w-6xl mx-auto">
+          <Link href="/pool" className="flex items-center gap-2.5 shrink-0">
+            <span className="ink-panel flex h-9 w-9 items-center justify-center rounded-xl">
+              <span className="font-display text-base font-bold">O</span>
+            </span>
+            <span className="hidden flex-col leading-tight sm:flex">
+              <span className="font-display text-lg font-bold text-foreground">Outlast</span>
+              <span className="eyebrow">
+                {season ? `Season ${season.seasonNumber}` : 'Private pool'}
+              </span>
+            </span>
           </Link>
-          <div className="flex items-center gap-4">
-            <Link
-              href={link.href}
-              className="hidden md:flex items-center gap-1.5 text-sm font-medium text-[#F97316] hover:text-orange-600 transition-colors"
+
+          <nav className="hidden md:flex items-center gap-1">
+            {navItems.map((item) => {
+              const isActive = pathname === item.href
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    'flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition-colors',
+                    isActive
+                      ? 'bg-muted text-foreground'
+                      : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground',
+                  )}
+                >
+                  <item.icon className="w-4 h-4" />
+                  <span>{item.label}</span>
+                </Link>
+              )
+            })}
+          </nav>
+
+          <div className="flex items-center gap-3 shrink-0">
+            <UserAvatar name={name ?? ''} avatarUrl={null} size={32} className="hidden sm:inline-flex" />
+            <span className="hidden sm:inline text-sm font-medium text-foreground">{name}</span>
+            <button
+              onClick={logout}
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
-              <Users className="w-4 h-4" />
-              <span>{link.label}</span>
-            </Link>
-            <Link
-              href="/profile"
-              className="hidden md:flex items-center gap-1.5 text-sm font-medium text-[#F97316] hover:text-orange-600 transition-colors"
-            >
-              <User className="w-4 h-4" />
-              <span>Profile</span>
-            </Link>
-            <Link
-              href="/rules"
-              className="flex items-center gap-1.5 text-sm font-medium text-[#F97316] hover:text-orange-600 transition-colors"
-            >
-              <ScrollText className="w-4 h-4" />
-              <span className="hidden sm:inline">Rules</span>
-            </Link>
-            <div className="flex items-center gap-3">
-              <span className="text-sm font-medium text-gray-700">{name}</span>
-              <button
-                onClick={logout}
-                className="text-sm text-gray-500 hover:text-gray-700 hover:underline transition-colors"
-              >
-                Log out
-              </button>
-            </div>
+              Log out
+            </button>
           </div>
         </div>
       </header>

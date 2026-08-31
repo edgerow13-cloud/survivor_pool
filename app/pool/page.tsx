@@ -35,7 +35,7 @@ function formatDeadline(isoString: string) {
 }
 
 function OutcomeBadge({ outcome }: { outcome: Pick['outcome'] | null }) {
-  if (!outcome) return <span className="text-xs text-gray-400">—</span>
+  if (!outcome) return <span className="text-xs text-muted-foreground">—</span>
   if (outcome === 'safe')
     return (
       <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
@@ -49,7 +49,7 @@ function OutcomeBadge({ outcome }: { outcome: Pick['outcome'] | null }) {
       </span>
     )
   return (
-    <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
+    <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground">
       No Pick
     </span>
   )
@@ -66,8 +66,8 @@ function TribeDot({ color }: { color: string }) {
 
 function Spinner() {
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
     </div>
   )
 }
@@ -119,10 +119,10 @@ export default function PoolPage() {
 
   if (fetchError) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl shadow-md w-full max-w-sm p-8 text-center">
-          <h1 className="text-xl font-bold text-gray-800 mb-2">Error</h1>
-          <p className="text-gray-500 text-sm">{fetchError}</p>
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="bg-card rounded-xl shadow-sm border border-border w-full max-w-sm p-8 text-center">
+          <h1 className="font-display text-xl font-bold text-foreground mb-2">Error</h1>
+          <p className="text-muted-foreground text-sm">{fetchError}</p>
         </div>
       </div>
     )
@@ -197,10 +197,10 @@ export default function PoolPage() {
 
   if (!currentWeek) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col">
+      <div className="min-h-screen bg-background flex flex-col">
         <Header />
         <div className="flex-1 flex items-center justify-center p-6">
-          <div className="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-400 max-w-md w-full">
+          <div className="bg-card rounded-xl border border-border p-8 text-center text-muted-foreground max-w-md w-full">
             No week scheduled yet. Check back soon.
           </div>
         </div>
@@ -212,14 +212,14 @@ export default function PoolPage() {
   const isDeadlinePassed = Date.now() >= deadline.getTime()
 
   const winnerPickBanner = showWinnerPickBanner ? (
-    <div className="bg-orange-50 border border-orange-200 rounded-lg px-4 py-3 flex items-start gap-3">
-      <span className="text-orange-500 text-lg leading-none mt-0.5">!</span>
+    <div className="bg-primary/10 border border-primary/25 rounded-lg px-4 py-3 flex items-start gap-3">
+      <span className="text-primary text-lg leading-none mt-0.5">!</span>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-orange-800">Submit your winner pick before Episode 3</p>
-        <p className="text-sm text-orange-700 mt-0.5">
+        <p className="text-sm font-semibold text-foreground">Submit your winner pick before Episode 3</p>
+        <p className="text-sm text-foreground/80 mt-0.5">
           Every player must predict who will win Survivor 50. This locks at the Episode 3 deadline
           and is used as a tiebreaker.{' '}
-          <a href="/profile" className="underline font-medium hover:text-orange-900">
+          <a href="/profile" className="underline font-medium text-primary hover:text-primary/80">
             Go to your profile to submit →
           </a>
         </p>
@@ -230,16 +230,17 @@ export default function PoolPage() {
   // ── Results entered ──────────────────────────────────────────────────────────
   if (currentWeek.is_results_entered) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col">
+      <div className="min-h-screen bg-background flex flex-col">
         <Header />
         <main className="flex-1">
           <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
             {winnerPickBanner}
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                Week {currentWeek.week_number} — Results
+              <span className="eyebrow">Week {currentWeek.week_number}</span>
+              <h1 className="font-display text-2xl font-bold text-foreground mt-1">
+                Results
               </h1>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 {eliminatedContestants.length > 0 ? (
                   <>
                     {eliminatedContestants.map((c, i) => (
@@ -263,14 +264,14 @@ export default function PoolPage() {
                     ? 'bg-green-50 border border-green-200'
                     : userPick.outcome === 'eliminated'
                       ? 'bg-red-50 border border-red-200'
-                      : 'bg-gray-50 border border-gray-200'
+                      : 'bg-muted border border-border'
                 }`}
               >
                 <div className="flex items-center gap-2">
                   {userPick.contestant_id && getTribe(userPick.contestant_id) && (
                     <TribeDot color={getTribe(userPick.contestant_id)!.color} />
                   )}
-                  <span className="font-medium text-gray-800">
+                  <span className="font-medium text-foreground">
                     {userPick.contestant_id
                       ? (contestantMap[userPick.contestant_id]?.name ?? '—')
                       : 'No pick'}
@@ -281,8 +282,8 @@ export default function PoolPage() {
                 </div>
               </div>
             ) : (
-              <div className="rounded-lg p-4 bg-gray-50 border border-gray-200">
-                <span className="text-gray-500 text-sm">No pick submitted</span>
+              <div className="rounded-lg p-4 bg-muted border border-border">
+                <span className="text-muted-foreground text-sm">No pick submitted</span>
                 <span className="ml-2">
                   <OutcomeBadge outcome="no_pick" />
                 </span>
@@ -290,8 +291,8 @@ export default function PoolPage() {
             )}
 
             <div>
-              <h2 className="text-sm font-semibold text-gray-700 mb-3">All Picks</h2>
-              <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
+              <h2 className="text-sm font-semibold text-foreground mb-3">All Picks</h2>
+              <div className="bg-card rounded-xl border border-border divide-y divide-border">
                 {sortedUsers
                   .filter(
                     (u: User) => u.status !== 'pending_approval' && u.status !== 'inactive',
@@ -305,13 +306,13 @@ export default function PoolPage() {
                     return (
                       <div key={u.id} className="flex items-center gap-3 px-4 py-3 text-sm">
                         <span
-                          className={`flex-1 font-medium ${u.status === 'eliminated' ? 'line-through text-gray-400' : 'text-gray-800'}`}
+                          className={`flex-1 font-medium ${u.status === 'eliminated' ? 'line-through text-muted-foreground' : 'text-foreground'}`}
                         >
                           {u.name}
                         </span>
                         <div className="flex items-center gap-1.5 flex-1">
                           {tribe && <TribeDot color={tribe.color} />}
-                          <span className="text-gray-600">{pickContestant?.name ?? '—'}</span>
+                          <span className="text-muted-foreground">{pickContestant?.name ?? '—'}</span>
                         </div>
                         <OutcomeBadge outcome={pick?.outcome ?? null} />
                       </div>
@@ -328,31 +329,32 @@ export default function PoolPage() {
   // ── Locked (deadline passed, awaiting results) ────────────────────────────────
   if (currentWeek.is_locked || isDeadlinePassed) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col">
+      <div className="min-h-screen bg-background flex flex-col">
         <Header />
         <main className="flex-1">
           <div className="max-w-2xl mx-auto px-4 py-8 space-y-4">
             {winnerPickBanner}
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                Week {currentWeek.week_number} — Picks are locked
+              <span className="eyebrow">Week {currentWeek.week_number}</span>
+              <h1 className="font-display text-2xl font-bold text-foreground mt-1">
+                Picks are locked
               </h1>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 Results will be revealed after the episode airs.
               </p>
             </div>
             {userPick?.contestant_id ? (
-              <div className="rounded-lg p-4 bg-gray-50 border border-gray-200 flex items-center gap-2">
+              <div className="rounded-lg p-4 bg-card border border-border flex items-center gap-2">
                 {getTribe(userPick.contestant_id) && (
                   <TribeDot color={getTribe(userPick.contestant_id)!.color} />
                 )}
-                <span className="font-medium text-gray-800">
+                <span className="font-medium text-foreground">
                   You picked {contestantMap[userPick.contestant_id]?.name ?? '—'}
                 </span>
               </div>
             ) : (
-              <div className="rounded-lg p-4 bg-gray-50 border border-gray-200">
-                <span className="text-gray-500 text-sm">No pick submitted</span>
+              <div className="rounded-lg p-4 bg-card border border-border">
+                <span className="text-muted-foreground text-sm">No pick submitted</span>
               </div>
             )}
           </div>
@@ -363,7 +365,7 @@ export default function PoolPage() {
 
   // ── Active pick window ────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-[#F9FAFB] flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col">
       <Header />
 
       <main className="flex-1 pb-36 md:pb-8">
@@ -371,16 +373,23 @@ export default function PoolPage() {
           {winnerPickBanner && <div className="mb-6">{winnerPickBanner}</div>}
 
           {/* Title & countdown */}
-          <div className="text-center mb-8">
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-              Week {currentWeek.week_number} — Pick Your Survivor
-            </h1>
-            <p className="text-gray-600 mb-4">Locks {formatDeadline(currentWeek.episode_date)}</p>
-            <CountdownTimer targetDate={deadline} />
+          <div className="flex flex-col items-center gap-5 mb-8">
+            <div className="text-center">
+              <span className="eyebrow">Week {currentWeek.week_number}</span>
+              <h1 className="font-display text-2xl md:text-3xl font-bold text-foreground mt-1">
+                Pick Your Survivor
+              </h1>
+            </div>
+            <div className="ink-panel rounded-2xl px-6 py-4 flex flex-col items-center gap-2 w-full max-w-sm">
+              <p className="eyebrow text-ink-foreground/60 relative">Locks {formatDeadline(currentWeek.episode_date)}</p>
+              <div className="relative">
+                <CountdownTimer targetDate={deadline} />
+              </div>
+            </div>
           </div>
 
           {isEliminated ? (
-            <div className="rounded-lg p-4 bg-red-50 border border-red-200 text-red-700 text-sm font-medium text-center max-w-md mx-auto">
+            <div className="rounded-lg p-4 bg-destructive/10 border border-destructive/25 text-destructive text-sm font-medium text-center max-w-md mx-auto">
               You&apos;ve been eliminated from the pool. Better luck next season!
             </div>
           ) : (

@@ -92,9 +92,9 @@ export default function TribeAssignmentRow({
   const currentTribe = tribes.find((t) => t.id === currentTribeId)
 
   return (
-    <tr className="border-b border-gray-100">
-      <td className="py-3 pr-4 font-medium text-gray-900">
-        <span className={contestant.is_eliminated ? 'line-through text-gray-400' : ''}>
+    <tr className="border-b border-border">
+      <td className="py-3 pr-4 font-medium text-foreground">
+        <span className={contestant.is_eliminated ? 'line-through text-muted-foreground' : ''}>
           {contestant.name}
         </span>
       </td>
@@ -105,10 +105,10 @@ export default function TribeAssignmentRow({
               className="w-3 h-3 rounded-full inline-block shrink-0"
               style={{ backgroundColor: currentTribe.color }}
             />
-            <span className="text-sm text-gray-700">{currentTribe.name}</span>
+            <span className="text-sm text-foreground">{currentTribe.name}</span>
           </div>
         ) : (
-          <span className="text-sm text-gray-400">—</span>
+          <span className="text-sm text-muted-foreground">—</span>
         )}
       </td>
       <td className="py-3 pr-4">
@@ -118,12 +118,12 @@ export default function TribeAssignmentRow({
             min="1"
             value={weekNum}
             onChange={(e) => setWeekNum(e.target.value)}
-            className="w-16 px-2 py-1 border border-gray-200 rounded text-xs focus:outline-none focus:ring-1 focus:ring-orange-500"
+            className="w-16 px-2 py-1 border border-border rounded text-xs focus:outline-none focus:ring-1 focus:ring-primary"
           />
           <select
             value={tribeId}
             onChange={(e) => setTribeId(e.target.value)}
-            className="px-2 py-1 border border-gray-200 rounded text-xs focus:outline-none focus:ring-1 focus:ring-orange-500"
+            className="px-2 py-1 border border-border rounded text-xs focus:outline-none focus:ring-1 focus:ring-primary"
           >
             {tribes.map((t) => (
               <option key={t.id} value={t.id}>
@@ -134,7 +134,7 @@ export default function TribeAssignmentRow({
           <button
             type="submit"
             disabled={loading === 'tribe'}
-            className="px-2 py-1 text-xs bg-orange-500 text-white rounded hover:bg-orange-600 disabled:opacity-50"
+            className="px-2 py-1 text-xs bg-primary text-white rounded hover:bg-primary/90 disabled:opacity-50"
           >
             {loading === 'tribe' ? '...' : 'Set'}
           </button>
@@ -144,7 +144,7 @@ export default function TribeAssignmentRow({
       </td>
       <td className="py-3">
         <form onSubmit={saveContestant} className="flex items-center gap-2">
-          <label className="flex items-center gap-1 text-xs text-gray-600 cursor-pointer">
+          <label className="flex items-center gap-1 text-xs text-muted-foreground cursor-pointer">
             <input
               type="checkbox"
               checked={isElim}
@@ -160,13 +160,13 @@ export default function TribeAssignmentRow({
               value={elimWeek}
               onChange={(e) => setElimWeek(e.target.value)}
               placeholder="Wk #"
-              className="w-14 px-2 py-1 border border-gray-200 rounded text-xs focus:outline-none focus:ring-1 focus:ring-orange-500"
+              className="w-14 px-2 py-1 border border-border rounded text-xs focus:outline-none focus:ring-1 focus:ring-primary"
             />
           )}
           <button
             type="submit"
             disabled={loading === 'contestant'}
-            className="px-2 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300 disabled:opacity-50"
+            className="px-2 py-1 text-xs bg-muted text-foreground rounded hover:bg-muted disabled:opacity-50"
           >
             {loading === 'contestant' ? '...' : 'Save'}
           </button>

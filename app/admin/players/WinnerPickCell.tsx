@@ -77,7 +77,7 @@ export default function WinnerPickCell({
         <select
           value={selected}
           onChange={(e) => setSelected(e.target.value)}
-          className="text-sm border border-gray-300 rounded-md px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
+          className="text-sm border border-input rounded-md px-2 py-1.5 bg-card focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
         >
           <option value="">— No pick —</option>
           {contestants.map((c) => (
@@ -115,7 +115,7 @@ export default function WinnerPickCell({
       <div className="flex flex-col">
         {contestantName ? (
           <>
-            <span className="text-sm text-gray-900">{contestantName}</span>
+            <span className="text-sm text-foreground">{contestantName}</span>
             {isEliminated && eliminatedWeek !== null && (
               <span className="text-xs font-medium text-[#DC2626]">
                 ⚠ Eliminated Wk {eliminatedWeek}
@@ -130,7 +130,7 @@ export default function WinnerPickCell({
         variant="ghost"
         size="sm"
         onClick={() => setIsEditing(true)}
-        className="h-7 w-7 p-0 text-gray-400 hover:text-gray-700 shrink-0"
+        className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground shrink-0"
         title="Edit winner pick"
       >
         <Pencil className="w-3.5 h-3.5" />

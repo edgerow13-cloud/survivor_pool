@@ -72,8 +72,8 @@ export default function ContestantsClient({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Contestants &amp; Tribes</h1>
-        <p className="text-gray-500 mt-1">
+        <h1 className="text-2xl font-bold text-foreground">Contestants &amp; Tribes</h1>
+        <p className="text-muted-foreground mt-1">
           {activeCount} active contestants across {tribes.length} tribe{tribes.length !== 1 ? 's' : ''} — {eliminatedCount} eliminated from show
         </p>
       </div>

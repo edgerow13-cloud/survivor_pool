@@ -85,7 +85,7 @@ export function WeekStatusCard({ week, playerPicks }: WeekStatusCardProps) {
   const lockDotColor = week.is_results_entered
     ? 'bg-[#16A34A]'
     : week.is_locked
-      ? 'bg-orange-400'
+      ? 'bg-primary'
       : 'bg-[#16A34A]'
 
   return (
@@ -144,7 +144,7 @@ export function WeekStatusCard({ week, playerPicks }: WeekStatusCardProps) {
             </Button>
           )}
           <Button
-            className="flex-1 bg-[#F97316] hover:bg-orange-600 text-white disabled:opacity-50"
+            className="flex-1 bg-[#F97316] hover:bg-primary/90 text-white disabled:opacity-50"
             disabled={!week.is_locked && !week.is_results_entered}
             asChild={week.is_locked || week.is_results_entered}
           >

@@ -169,10 +169,8 @@ export default async function AdminOverviewPage() {
         {stats.map((stat) => (
           <Card key={stat.title} className="gap-2 py-4">
             <CardContent className="pb-0">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                {stat.title}
-              </p>
-              <p className="text-2xl font-bold text-foreground">{stat.value}</p>
+              <p className="eyebrow">{stat.title}</p>
+              <p className="font-display text-2xl font-bold text-foreground mt-1">{stat.value}</p>
               <p className="text-xs text-muted-foreground">{stat.subtitle}</p>
             </CardContent>
           </Card>

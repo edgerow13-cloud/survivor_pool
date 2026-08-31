@@ -54,24 +54,24 @@ export default function TribeForm({ tribe }: Props) {
   return (
     <form onSubmit={submit} className="flex items-end gap-3 flex-wrap">
       <div>
-        <label className="block text-xs text-gray-500 mb-1">Name</label>
+        <label className="block text-xs text-muted-foreground mb-1">Name</label>
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
           placeholder="Tribe name"
-          className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+          className="px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
         />
       </div>
       <div>
-        <label className="block text-xs text-gray-500 mb-1">Color</label>
+        <label className="block text-xs text-muted-foreground mb-1">Color</label>
         <div className="flex items-center gap-2">
           <input
             type="color"
             value={color}
             onChange={(e) => setColor(e.target.value)}
-            className="w-10 h-9 rounded border border-gray-200 cursor-pointer p-0.5"
+            className="w-10 h-9 rounded border border-border cursor-pointer p-0.5"
           />
           <input
             type="text"
@@ -79,7 +79,7 @@ export default function TribeForm({ tribe }: Props) {
             onChange={(e) => setColor(e.target.value)}
             pattern="#[0-9A-Fa-f]{6}"
             placeholder="#F97316"
-            className="w-24 px-3 py-2 border border-gray-200 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-orange-500"
+            className="w-24 px-3 py-2 border border-border rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
       </div>
@@ -91,14 +91,14 @@ export default function TribeForm({ tribe }: Props) {
           onChange={(e) => setIsMerged(e.target.checked)}
           className="rounded"
         />
-        <label htmlFor={`merged-${tribe?.id ?? 'new'}`} className="text-sm text-gray-600">
+        <label htmlFor={`merged-${tribe?.id ?? 'new'}`} className="text-sm text-muted-foreground">
           Merged tribe
         </label>
       </div>
       <button
         type="submit"
         disabled={loading}
-        className="px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 disabled:opacity-50"
+        className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 disabled:opacity-50"
       >
         {loading ? '...' : isEdit ? 'Save' : 'Add Tribe'}
       </button>

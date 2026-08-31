@@ -158,7 +158,7 @@ export function ContestantRosterTable({
         <TableCell className="font-medium">
           <div className="flex items-center gap-2">
             {/* Photo thumbnail */}
-            <div className="w-8 h-8 rounded-full bg-gray-100 overflow-hidden shrink-0 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full bg-muted overflow-hidden shrink-0 flex items-center justify-center">
               {c.photo_url ? (
                 <Image
                   src={c.photo_url}
@@ -168,10 +168,10 @@ export function ContestantRosterTable({
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <span className="text-xs text-gray-400">—</span>
+                <span className="text-xs text-muted-foreground">—</span>
               )}
             </div>
-            <span className={isElim ? 'line-through text-gray-500' : undefined}>{c.name}</span>
+            <span className={isElim ? 'line-through text-muted-foreground' : undefined}>{c.name}</span>
           </div>
         </TableCell>
         <TableCell>
@@ -195,7 +195,7 @@ export function ContestantRosterTable({
             <Badge className="bg-[#16A34A] hover:bg-[#16A34A]/90 text-white">Active</Badge>
           )}
         </TableCell>
-        <TableCell className={isElim ? 'text-gray-600' : 'text-muted-foreground'}>
+        <TableCell className={isElim ? 'text-muted-foreground' : 'text-muted-foreground'}>
           {c.eliminated_week ? `Week ${c.eliminated_week}` : '—'}
         </TableCell>
         <TableCell className="text-right">
@@ -204,7 +204,7 @@ export function ContestantRosterTable({
               variant="outline"
               size="sm"
               onClick={() => openPhotoDialog(c)}
-              className="gap-1.5 text-gray-600"
+              className="gap-1.5 text-muted-foreground"
             >
               <Camera className="w-3.5 h-3.5" />
               Photo
@@ -214,7 +214,7 @@ export function ContestantRosterTable({
                 variant="outline"
                 size="sm"
                 disabled={loadingId === c.id}
-                className="text-gray-600"
+                className="text-muted-foreground"
                 onClick={() => reinstate(c.id)}
               >
                 {loadingId === c.id ? '…' : 'Reinstate'}
@@ -250,9 +250,9 @@ export function ContestantRosterTable({
                 <ContestantRow key={c.id} c={c} isElim={false} />
               ))}
 
-              <TableRow className="bg-gray-100 hover:bg-gray-100">
+              <TableRow className="bg-muted hover:bg-muted">
                 <TableCell colSpan={6} className="py-2 text-center">
-                  <span className="text-sm font-medium text-gray-600">
+                  <span className="text-sm font-medium text-muted-foreground">
                     Eliminated from Show ({eliminated.length})
                   </span>
                 </TableCell>
@@ -278,7 +278,7 @@ export function ContestantRosterTable({
             {photoTarget?.photo_url && (
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Current photo</Label>
-                <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100">
+                <div className="w-16 h-16 rounded-full overflow-hidden bg-muted">
                   <Image
                     src={photoTarget.photo_url}
                     alt={photoTarget.name}
@@ -294,7 +294,7 @@ export function ContestantRosterTable({
             {previewUrl && (
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Preview</Label>
-                <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100">
+                <div className="w-16 h-16 rounded-full overflow-hidden bg-muted">
                   <Image
                     src={previewUrl}
                     alt="Preview"
@@ -316,7 +316,7 @@ export function ContestantRosterTable({
                 type="file"
                 accept="image/*"
                 onChange={handleFileChange}
-                className="block w-full text-sm text-gray-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border file:border-gray-300 file:text-sm file:bg-white file:text-gray-700 hover:file:bg-gray-50"
+                className="block w-full text-sm text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border file:border-input file:text-sm file:bg-card file:text-foreground hover:file:bg-muted"
               />
             </div>
 

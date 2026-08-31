@@ -2,27 +2,28 @@ import { RulesBackLink } from './RulesBackLink'
 
 export default function RulesPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Orange accent bar */}
-      <div className="h-1 bg-[#F97316]" />
+      <div className="h-1 bg-primary" />
 
       <div className="max-w-2xl mx-auto px-4 py-10 sm:py-14">
         {/* Header */}
         <div className="mb-10">
           <RulesBackLink />
-          <h1 className="text-3xl font-bold text-gray-900">Pool Rules</h1>
-          <p className="mt-2 text-gray-500">Survivor 50 — Season 50 All Stars</p>
+          <span className="eyebrow">Season 50</span>
+          <h1 className="font-display text-3xl font-bold text-foreground mt-1">Pool Rules</h1>
+          <p className="mt-2 text-muted-foreground">Survivor 50 — Season 50 All Stars</p>
         </div>
 
         <div className="space-y-8">
 
           {/* How It Works */}
           <section>
-            <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <h2 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
               <span className="inline-block w-1 h-5 rounded-full bg-[#F97316]" />
               How It Works
             </h2>
-            <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
+            <div className="bg-card rounded-xl border border-border divide-y divide-border">
               <Rule>
                 The buy-in is <strong>$10 per player</strong>, collected by the commissioner
                 before the Episode 3 deadline. Winner takes the pot.
@@ -49,11 +50,11 @@ export default function RulesPage() {
 
           {/* Pick Rules */}
           <section>
-            <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <h2 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
               <span className="inline-block w-1 h-5 rounded-full bg-[#F97316]" />
               Pick Rules
             </h2>
-            <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
+            <div className="bg-card rounded-xl border border-border divide-y divide-border">
               <Rule label="One pick per week">
                 You submit exactly one castaway per episode. You cannot change your pick after
                 the deadline.
@@ -81,16 +82,16 @@ export default function RulesPage() {
 
           {/* Outcomes */}
           <section>
-            <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <h2 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
               <span className="inline-block w-1 h-5 rounded-full bg-[#16A34A]" />
               Outcomes
             </h2>
-            <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
+            <div className="bg-card rounded-xl border border-border divide-y divide-border">
               <div className="flex items-start gap-3 px-4 py-3">
                 <span className="mt-0.5 inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-green-100 text-green-700 shrink-0">
                   Safe
                 </span>
-                <p className="text-sm text-gray-700">
+                <p className="text-sm text-foreground">
                   Your castaway survived the episode. You stay in the pool and move on to the
                   next week.
                 </p>
@@ -99,7 +100,7 @@ export default function RulesPage() {
                 <span className="mt-0.5 inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-700 shrink-0">
                   Eliminated
                 </span>
-                <p className="text-sm text-gray-700">
+                <p className="text-sm text-foreground">
                   Your castaway was voted out or left the game. You are eliminated from the pool.
                   You can still view all picks as a spectator, but you cannot submit future picks.
                 </p>
@@ -108,7 +109,7 @@ export default function RulesPage() {
                 <span className="mt-0.5 inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-gray-100 text-gray-600 shrink-0 whitespace-nowrap">
                   No Pick
                 </span>
-                <p className="text-sm text-gray-700">
+                <p className="text-sm text-foreground">
                   No pick was submitted before the deadline. You are automatically eliminated.
                 </p>
               </div>
@@ -117,11 +118,11 @@ export default function RulesPage() {
 
           {/* Winner Pick & Tiebreaker */}
           <section>
-            <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <h2 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
               <span className="inline-block w-1 h-5 rounded-full bg-[#F97316]" />
               Winner Pick &amp; Tiebreaker
             </h2>
-            <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
+            <div className="bg-card rounded-xl border border-border divide-y divide-border">
               <Rule label="Pregame prediction required">
                 Before the Episode 3 deadline, every player must submit a pregame prediction for
                 who they think will win Survivor 50. This is your &ldquo;winner pick.&rdquo;
@@ -144,11 +145,11 @@ export default function RulesPage() {
 
           {/* Picks Grid Visibility */}
           <section>
-            <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <h2 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
               <span className="inline-block w-1 h-5 rounded-full bg-[#F97316]" />
               Pick Visibility
             </h2>
-            <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
+            <div className="bg-card rounded-xl border border-border divide-y divide-border">
               <Rule>
                 Picks are <strong>hidden from other players</strong> until the episode deadline
                 passes. Before lock, you can only see your own pick for the current week.
@@ -165,11 +166,11 @@ export default function RulesPage() {
 
           {/* Tribes */}
           <section>
-            <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <h2 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
               <span className="inline-block w-1 h-5 rounded-full bg-[#F97316]" />
               Tribe Colors
             </h2>
-            <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
+            <div className="bg-card rounded-xl border border-border divide-y divide-border">
               <Rule>
                 Each castaway&apos;s tribe affiliation is shown as a colored dot in the picks
                 grid. Tribe colors reflect the castaway&apos;s tribe <em>during that specific
@@ -184,11 +185,11 @@ export default function RulesPage() {
 
           {/* Commissioner */}
           <section>
-            <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <h2 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
               <span className="inline-block w-1 h-5 rounded-full bg-[#F97316]" />
               Commissioner
             </h2>
-            <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
+            <div className="bg-card rounded-xl border border-border divide-y divide-border">
               <Rule>
                 The commissioner (Eddie) runs the pool. He adds players, enters weekly results,
                 and can override picks in exceptional circumstances.
@@ -201,7 +202,7 @@ export default function RulesPage() {
           </section>
 
           {/* Footer */}
-          <p className="text-xs text-center text-gray-400 pt-2">
+          <p className="text-xs text-center text-muted-foreground pt-2">
             Questions? Text Eddie.
           </p>
 
@@ -220,8 +221,8 @@ function Rule({
 }) {
   return (
     <div className="px-4 py-3">
-      <p className="text-sm text-gray-700 leading-relaxed">
-        {label && <span className="font-semibold text-gray-900">{label}: </span>}
+      <p className="text-sm text-foreground leading-relaxed">
+        {label && <span className="font-semibold text-foreground">{label}: </span>}
         {children}
       </p>
     </div>

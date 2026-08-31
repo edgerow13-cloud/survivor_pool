@@ -216,7 +216,7 @@ export default function WeeksTable({
                     <TableRow
                       key={week.id}
                       className={cn(
-                        status === 'in_progress' && 'bg-orange-50 hover:bg-orange-100',
+                        status === 'in_progress' && 'bg-primary/10 hover:bg-primary/15',
                       )}
                     >
                       <TableCell

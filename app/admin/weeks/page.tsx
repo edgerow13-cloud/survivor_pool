@@ -68,7 +68,7 @@ export default async function WeeksPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Weeks &amp; Results</h1>
+      <h1 className="text-2xl font-bold text-foreground">Weeks &amp; Results</h1>
 
       <WeekForm nextWeekNumber={nextWeekNumber} />
 

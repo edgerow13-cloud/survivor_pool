@@ -44,7 +44,7 @@ export default function AddPlayerForm() {
     <div className="space-y-4">
       <form onSubmit={submit} className="flex flex-col gap-4 sm:flex-row sm:items-end">
         <div className="flex-1 space-y-1.5">
-          <label htmlFor="player-name" className="text-sm font-medium text-gray-700">
+          <label htmlFor="player-name" className="text-sm font-medium text-foreground">
             Name
           </label>
           <Input
@@ -57,7 +57,7 @@ export default function AddPlayerForm() {
           />
         </div>
         <div className="flex-1 space-y-1.5">
-          <label htmlFor="player-email" className="text-sm font-medium text-gray-700">
+          <label htmlFor="player-email" className="text-sm font-medium text-foreground">
             Email
           </label>
           <Input

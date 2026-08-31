@@ -109,7 +109,7 @@ export default function PickForm({
 
       {/* Error */}
       {error && (
-        <div className="mb-4 rounded-lg p-3 bg-red-50 border border-red-200 text-red-700 text-sm">
+        <div className="mb-4 rounded-lg p-3 bg-destructive/10 border border-destructive/30 text-destructive text-sm">
           {error}
         </div>
       )}
@@ -151,8 +151,8 @@ export default function PickForm({
             {alreadyPicked.length > 0 && (
               <>
                 <div className="flex items-center gap-2 mt-8 mb-4">
-                  <Calendar className="h-4 w-4 text-gray-400" />
-                  <p className="text-sm font-medium text-gray-500">Already Picked ({alreadyPicked.length})</p>
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <p className="text-sm font-medium text-muted-foreground">Already Picked ({alreadyPicked.length})</p>
                 </div>
                 <div className="flex flex-col gap-2 md:grid md:grid-cols-3 lg:grid-cols-4 md:gap-4 opacity-60">
                   {alreadyPicked.map(renderCard)}
@@ -164,8 +164,8 @@ export default function PickForm({
             {eliminated.length > 0 && (
               <>
                 <div className="flex items-center gap-2 mt-8 mb-4">
-                  <Ban className="h-4 w-4 text-gray-400" />
-                  <p className="text-sm font-medium text-gray-500">Eliminated ({eliminated.length})</p>
+                  <Ban className="h-4 w-4 text-muted-foreground" />
+                  <p className="text-sm font-medium text-muted-foreground">Eliminated ({eliminated.length})</p>
                 </div>
                 <div className="flex flex-col gap-2 md:grid md:grid-cols-3 lg:grid-cols-4 md:gap-4 opacity-40">
                   {eliminated.map(renderCard)}

@@ -10,7 +10,7 @@ export function CountdownTimer({ targetDate }: CountdownTimerProps) {
   const timeLeft = useCountdown(targetDate)
 
   if (timeLeft.isExpired) {
-    return <p className="text-sm font-medium text-gray-500">Picks are locked</p>
+    return <p className="text-sm font-medium text-ink-foreground/70">Picks are locked</p>
   }
 
   const units = [
@@ -25,13 +25,13 @@ export function CountdownTimer({ targetDate }: CountdownTimerProps) {
       {units.map((unit, i) => (
         <div key={unit.label} className="flex items-center gap-2">
           <div className="flex flex-col items-center">
-            <span className="text-2xl font-bold text-[#F97316] tabular-nums">
+            <span className="font-display text-2xl font-bold text-primary tabular-nums">
               {String(unit.value).padStart(2, '0')}
             </span>
-            <span className="text-xs text-gray-500 uppercase">{unit.label}</span>
+            <span className="eyebrow text-ink-foreground/60">{unit.label}</span>
           </div>
           {i < units.length - 1 && (
-            <span className="text-xl text-gray-300 font-light">:</span>
+            <span className="text-xl text-primary/50 font-light">:</span>
           )}
         </div>
       ))}

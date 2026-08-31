@@ -67,7 +67,7 @@ export function TribeCard({ tribe, members }: Props) {
               className="h-4 w-4 rounded-full flex-shrink-0"
               style={{ backgroundColor: tribe.color }}
             />
-            <span className="font-bold text-lg text-gray-900">{tribe.name}</span>
+            <span className="font-bold text-lg text-foreground">{tribe.name}</span>
             {tribe.is_merged && (
               <Badge className="bg-amber-100 text-amber-800 border-amber-300 gap-1">
                 <Crown className="h-3 w-3" />
@@ -75,7 +75,7 @@ export function TribeCard({ tribe, members }: Props) {
               </Badge>
             )}
           </div>
-          <Badge variant="secondary" className="w-fit mt-1 text-gray-600 bg-gray-100">
+          <Badge variant="secondary" className="w-fit mt-1 text-muted-foreground bg-muted">
             {members.length} members
           </Badge>
         </CardHeader>
@@ -83,7 +83,7 @@ export function TribeCard({ tribe, members }: Props) {
           <ScrollArea className="h-[120px] pr-3">
             <div className="space-y-1">
               {members.map((member) => (
-                <div key={member} className="text-sm text-gray-600">
+                <div key={member} className="text-sm text-muted-foreground">
                   {member}
                 </div>
               ))}

@@ -109,23 +109,23 @@ export default function WeekRow({ week, contestants, users, eliminatedContestant
   const pickContestants = contestants.filter((c) => !c.is_eliminated)
 
   return (
-    <div className="border border-gray-200 rounded-lg p-4 space-y-3">
+    <div className="border border-border rounded-lg p-4 space-y-3">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-4 flex-wrap">
-          <span className="font-semibold text-gray-900">Week {week.week_number}</span>
-          <span className="text-sm text-gray-500">
+          <span className="font-semibold text-foreground">Week {week.week_number}</span>
+          <span className="text-sm text-muted-foreground">
             {new Date(week.episode_date).toLocaleString()}
           </span>
           {week.is_results_entered && eliminatedContestantName && (
             <span className="text-sm text-red-600">Eliminated: {eliminatedContestantName}</span>
           )}
           {week.is_results_entered && !eliminatedContestantName && (
-            <span className="text-sm text-gray-400">No elimination</span>
+            <span className="text-sm text-muted-foreground">No elimination</span>
           )}
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <span
-            className={`px-2 py-0.5 text-xs rounded-full font-medium ${week.is_locked ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-600'}`}
+            className={`px-2 py-0.5 text-xs rounded-full font-medium ${week.is_locked ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'}`}
           >
             {week.is_locked ? 'Locked' : 'Open'}
           </span>
@@ -137,19 +137,19 @@ export default function WeekRow({ week, contestants, users, eliminatedContestant
           <button
             onClick={toggleLock}
             disabled={loading === 'lock'}
-            className="px-3 py-1 text-xs border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-50"
+            className="px-3 py-1 text-xs border border-border rounded-md hover:bg-muted disabled:opacity-50"
           >
             {loading === 'lock' ? '...' : week.is_locked ? 'Unlock' : 'Lock'}
           </button>
           <button
             onClick={() => setShowResults(!showResults)}
-            className="px-3 py-1 text-xs border border-gray-200 rounded-md hover:bg-gray-50"
+            className="px-3 py-1 text-xs border border-border rounded-md hover:bg-muted"
           >
             {week.is_results_entered ? 'Re-enter Results' : 'Enter Results'}
           </button>
           <button
             onClick={() => setShowOverride(!showOverride)}
-            className="px-3 py-1 text-xs border border-gray-200 rounded-md hover:bg-gray-50"
+            className="px-3 py-1 text-xs border border-border rounded-md hover:bg-muted"
           >
             Override Pick
           </button>
@@ -161,14 +161,14 @@ export default function WeekRow({ week, contestants, users, eliminatedContestant
       {showResults && (
         <form
           onSubmit={enterResults}
-          className="flex items-end gap-3 pt-3 border-t border-gray-100 flex-wrap"
+          className="flex items-end gap-3 pt-3 border-t border-border flex-wrap"
         >
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Eliminated Contestant</label>
+            <label className="block text-xs text-muted-foreground mb-1">Eliminated Contestant</label>
             <select
               value={selectedContestant}
               onChange={(e) => setSelectedContestant(e.target.value)}
-              className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="">— No elimination —</option>
               {resultContestants.map((c) => (
@@ -181,7 +181,7 @@ export default function WeekRow({ week, contestants, users, eliminatedContestant
           <button
             type="submit"
             disabled={loading === 'results'}
-            className="px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 disabled:opacity-50"
+            className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 disabled:opacity-50"
           >
             {loading === 'results' ? '...' : 'Save Results'}
           </button>
@@ -191,15 +191,15 @@ export default function WeekRow({ week, contestants, users, eliminatedContestant
       {showOverride && (
         <form
           onSubmit={submitOverride}
-          className="flex items-end gap-3 pt-3 border-t border-gray-100 flex-wrap"
+          className="flex items-end gap-3 pt-3 border-t border-border flex-wrap"
         >
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Player</label>
+            <label className="block text-xs text-muted-foreground mb-1">Player</label>
             <select
               value={overrideUser}
               onChange={(e) => setOverrideUser(e.target.value)}
               required
-              className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="">Select player...</option>
               {users.map((u) => (
@@ -210,11 +210,11 @@ export default function WeekRow({ week, contestants, users, eliminatedContestant
             </select>
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Contestant</label>
+            <label className="block text-xs text-muted-foreground mb-1">Contestant</label>
             <select
               value={overrideContestant}
               onChange={(e) => setOverrideContestant(e.target.value)}
-              className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="">— No Pick —</option>
               {pickContestants.map((c) => (
@@ -227,7 +227,7 @@ export default function WeekRow({ week, contestants, users, eliminatedContestant
           <button
             type="submit"
             disabled={loading === 'override'}
-            className="px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 disabled:opacity-50"
+            className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 disabled:opacity-50"
           >
             {loading === 'override' ? '...' : 'Set Pick'}
           </button>

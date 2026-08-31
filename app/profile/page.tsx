@@ -32,8 +32,8 @@ interface ProfileData {
 
 function Spinner() {
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
     </div>
   )
 }
@@ -205,8 +205,8 @@ export default function ProfilePage() {
 
   if (fetchError) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <p className="text-red-600 text-sm">{fetchError}</p>
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <p className="text-destructive text-sm">{fetchError}</p>
       </div>
     )
   }
@@ -255,11 +255,25 @@ export default function ProfilePage() {
     : null
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col pb-20 md:pb-0">
+    <div className="min-h-screen bg-background flex flex-col pb-20 md:pb-0">
       <Header />
       <main className="flex-1">
         <div className="max-w-lg mx-auto px-4 py-8 space-y-6">
-          <h1 className="text-2xl font-bold text-gray-900">Your Profile</h1>
+          <div>
+            <span className="eyebrow">Your profile</span>
+            <h1 className="font-display text-2xl font-bold text-foreground mt-1">
+              Keep it current.
+            </h1>
+          </div>
+
+          {/* ── Hero card ─────────────────────────────────────── */}
+          <div className="ink-panel rounded-2xl p-5 flex items-center gap-4">
+            <UserAvatar name={nameInput} avatarUrl={avatarUrl} size={56} className="relative ring-2 ring-white/20" />
+            <div className="relative min-w-0">
+              <p className="font-display text-xl font-bold truncate">{nameInput}</p>
+              <p className="text-sm text-ink-foreground/60">Private pool profile</p>
+            </div>
+          </div>
 
           {/* ── Avatar ────────────────────────────────────────── */}
           <Card>
@@ -330,7 +344,7 @@ export default function ProfilePage() {
               <Button
                 onClick={saveName}
                 disabled={nameSaving || !nameInput.trim()}
-                className="bg-[#F97316] hover:bg-[#F97316]/90 text-white disabled:opacity-50"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-50"
               >
                 {nameSaving ? 'Saving…' : 'Save Name'}
               </Button>
@@ -351,11 +365,11 @@ export default function ProfilePage() {
             </CardHeader>
             <CardContent className="space-y-4">
               {isPickLocked ? (
-                <div className="flex items-center gap-2 px-3 py-2.5 rounded-md bg-gray-50 border border-gray-200">
+                <div className="flex items-center gap-2 px-3 py-2.5 rounded-md bg-muted border border-border">
                   {selectedContestant?.tribe && (
                     <TribeDot color={selectedContestant.tribe.color} />
                   )}
-                  <span className="text-sm font-medium text-gray-800">
+                  <span className="text-sm font-medium text-foreground">
                     {selectedContestant?.name ?? 'No prediction made'}
                   </span>
                 </div>
@@ -371,14 +385,14 @@ export default function ProfilePage() {
                       placeholder="Search contestants…"
                       className="pr-8"
                     />
-                    <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                    <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                     {isDropdownOpen && filtered.length > 0 && (
-                      <div className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-56 overflow-y-auto">
+                      <div className="absolute z-20 mt-1 w-full bg-card border border-border rounded-md shadow-lg max-h-56 overflow-y-auto">
                         {filtered.map((c) => (
                           <button
                             key={c.id}
                             type="button"
-                            className="w-full text-left px-3 py-2 text-sm flex items-center gap-2 hover:bg-orange-50 hover:text-orange-900 transition-colors"
+                            className="w-full text-left px-3 py-2 text-sm flex items-center gap-2 hover:bg-primary/10 hover:text-foreground transition-colors"
                             onMouseDown={(e) => {
                               e.preventDefault() // prevent blur firing before click registers
                               selectContestant(c)
@@ -417,7 +431,7 @@ export default function ProfilePage() {
                 <Button
                   onClick={saveWinnerPick}
                   disabled={pickSaving || !selectedContestantId}
-                  className="bg-[#F97316] hover:bg-[#F97316]/90 text-white disabled:opacity-50"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-50"
                 >
                   {pickSaving ? 'Saving…' : 'Save Pick'}
                 </Button>

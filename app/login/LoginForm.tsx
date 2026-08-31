@@ -40,7 +40,7 @@ export default function LoginForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="email" className="block text-sm font-medium text-foreground mb-1">
           Email Address
         </label>
         <input
@@ -50,18 +50,18 @@ export default function LoginForm() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@example.com"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+          className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
         />
       </div>
 
       {error && (
-        <p className="text-red-600 text-sm">{error}</p>
+        <p className="text-destructive text-sm">{error}</p>
       )}
 
       <button
         type="submit"
         disabled={loading}
-        className="w-full py-2 px-4 bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white font-semibold rounded-md transition-colors"
+        className="w-full py-2 px-4 bg-primary hover:bg-primary/90 disabled:bg-primary/40 text-primary-foreground font-semibold rounded-md transition-colors"
       >
         {loading ? 'Checking...' : 'Enter Pool'}
       </button>

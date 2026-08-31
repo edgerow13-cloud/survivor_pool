@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { Vote, Grid3X3, User } from 'lucide-react'
 import { usePathname } from 'next/navigation'
+import { cn } from '@/lib/utils'
 
 export function BottomTabBar() {
   const pathname = usePathname()
@@ -29,15 +30,17 @@ export function BottomTabBar() {
   ]
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 h-16 border-t border-gray-200 bg-white flex items-stretch">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 h-16 border-t border-border bg-card/95 backdrop-blur flex items-stretch pb-[env(safe-area-inset-bottom)]">
       {tabs.map((tab) => {
         const Icon = tab.icon
         return (
           <Link
             key={tab.href}
             href={tab.href}
-            className="flex flex-1 flex-col items-center justify-center gap-1 text-xs font-medium transition-colors"
-            style={{ color: tab.isActive ? '#F97316' : '#6B7280' }}
+            className={cn(
+              'flex flex-1 flex-col items-center justify-center gap-1 text-xs font-semibold transition-colors',
+              tab.isActive ? 'text-primary' : 'text-muted-foreground',
+            )}
           >
             <Icon className="h-5 w-5" />
             {tab.label}

@@ -32,7 +32,7 @@ function StatusBadge({ status }: { status: User['status'] }) {
   if (status === 'eliminated') {
     return <Badge className="bg-[#DC2626] text-white hover:bg-[#DC2626]">Eliminated</Badge>
   }
-  return <Badge className="bg-gray-400 text-white hover:bg-gray-400">Inactive</Badge>
+  return <Badge className="bg-muted-foreground/40 text-white hover:bg-muted-foreground/40">Inactive</Badge>
 }
 
 function RoleBadge({ role }: { role: User['role'] }) {
@@ -99,7 +99,7 @@ export default async function PlayersPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Players</h1>
+      <h1 className="text-2xl font-bold text-foreground">Players</h1>
 
       {/* Add Player */}
       <Card>
@@ -140,7 +140,7 @@ export default async function PlayersPage() {
                       user.status === 'eliminated' && 'bg-red-50 hover:bg-red-100',
                     )}
                   >
-                    <TableCell className="font-medium text-gray-900">{user.name}</TableCell>
+                    <TableCell className="font-medium text-foreground">{user.name}</TableCell>
                     <TableCell className="text-muted-foreground">{user.email}</TableCell>
                     <TableCell>
                       <StatusBadge status={user.status} />

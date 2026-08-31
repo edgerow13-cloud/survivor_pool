@@ -120,7 +120,7 @@ export function TribeAssignmentPanel({
               className="w-20"
             />
           </div>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted-foreground">
             Assignments take effect starting this week — past weeks are unchanged
           </p>
         </div>
@@ -129,7 +129,7 @@ export function TribeAssignmentPanel({
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Left — Select Contestants */}
           <div className="space-y-4">
-            <h4 className="font-medium text-gray-900">Select contestants to move</h4>
+            <h4 className="font-medium text-foreground">Select contestants to move</h4>
             <ScrollArea className="h-[280px] rounded-md border p-4">
               <div className="space-y-6">
                 {tribes.map((tribe) => (
@@ -137,7 +137,7 @@ export function TribeAssignmentPanel({
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className="h-3 w-3 rounded-full" style={{ backgroundColor: tribe.color }} />
-                        <span className="font-medium text-sm text-gray-900">{tribe.name}</span>
+                        <span className="font-medium text-sm text-foreground">{tribe.name}</span>
                       </div>
                       <button
                         onClick={() => onSelectAllInTribe(tribe.id)}
@@ -156,7 +156,7 @@ export function TribeAssignmentPanel({
                           />
                           <Label
                             htmlFor={`tap-${contestant.id}`}
-                            className="text-sm text-gray-700 cursor-pointer"
+                            className="text-sm text-foreground cursor-pointer"
                           >
                             {contestant.name}
                           </Label>
@@ -167,7 +167,7 @@ export function TribeAssignmentPanel({
                 ))}
                 {noTribe.length > 0 && (
                   <div className="space-y-2">
-                    <span className="font-medium text-sm text-gray-500">No tribe</span>
+                    <span className="font-medium text-sm text-muted-foreground">No tribe</span>
                     <div className="space-y-1 pl-5">
                       {noTribe.map((contestant) => (
                         <div key={contestant.id} className="flex items-center gap-2">
@@ -178,7 +178,7 @@ export function TribeAssignmentPanel({
                           />
                           <Label
                             htmlFor={`tap-${contestant.id}`}
-                            className="text-sm text-gray-700 cursor-pointer"
+                            className="text-sm text-foreground cursor-pointer"
                           >
                             {contestant.name}
                           </Label>
@@ -193,7 +193,7 @@ export function TribeAssignmentPanel({
 
           {/* Right — Destination Tribe */}
           <div className="space-y-4">
-            <h4 className="font-medium text-gray-900">Move selected to:</h4>
+            <h4 className="font-medium text-foreground">Move selected to:</h4>
             <div className="space-y-2">
               {tribes.map((tribe) => (
                 <button
@@ -202,16 +202,16 @@ export function TribeAssignmentPanel({
                   className={`w-full flex items-center gap-3 rounded-lg border-2 p-3 transition-colors ${
                     selectedDestinationTribeId === tribe.id
                       ? 'border-[#F97316] bg-[#F97316]/5'
-                      : 'border-gray-200 hover:border-gray-300'
+                      : 'border-border hover:border-input'
                   }`}
                 >
                   <div className="h-4 w-4 rounded-full" style={{ backgroundColor: tribe.color }} />
-                  <span className="font-medium text-gray-900">{tribe.name}</span>
+                  <span className="font-medium text-foreground">{tribe.name}</span>
                 </button>
               ))}
               <button
                 onClick={onCreateNewTribe}
-                className="w-full flex items-center gap-3 rounded-lg border-2 border-dashed border-gray-300 p-3 text-gray-500 hover:border-gray-400 hover:text-gray-600 transition-colors"
+                className="w-full flex items-center gap-3 rounded-lg border-2 border-dashed border-input p-3 text-muted-foreground hover:border-muted-foreground/40 hover:text-muted-foreground transition-colors"
               >
                 <Plus className="h-4 w-4" />
                 <span className="text-sm">Create and move to new tribe</span>
@@ -222,16 +222,16 @@ export function TribeAssignmentPanel({
 
         {/* Preview */}
         {selectedContestants.size > 0 && selectedDestinationTribeId && (
-          <div className="rounded-lg bg-gray-50 p-4 border">
-            <p className="text-sm font-medium text-gray-700">
+          <div className="rounded-lg bg-muted p-4 border">
+            <p className="text-sm font-medium text-foreground">
               Moving {selectedContestants.size} contestant{selectedContestants.size !== 1 ? 's' : ''} to{' '}
               <span className="text-[#F97316]">{destinationTribe?.name}</span>:
             </p>
-            <p className="text-sm text-gray-600 mt-1">{selectedNames.join(', ')}</p>
+            <p className="text-sm text-muted-foreground mt-1">{selectedNames.join(', ')}</p>
           </div>
         )}
 
-        <p className="text-sm text-gray-500">Only select contestants who are CHANGING tribes.</p>
+        <p className="text-sm text-muted-foreground">Only select contestants who are CHANGING tribes.</p>
 
         {error && <p className="text-sm text-red-600">{error}</p>}
 

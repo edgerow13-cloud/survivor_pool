@@ -42,18 +42,18 @@ export function PickReminderCard({ unpickedCount, activeCount, weekNumber, hasOp
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
-      <h2 className="text-lg font-semibold text-gray-900 mb-1">Pick Reminder</h2>
-      <p className="text-sm text-gray-500 mb-4">
+    <div className="bg-card rounded-lg border border-border p-6">
+      <h2 className="text-lg font-semibold text-foreground mb-1">Pick Reminder</h2>
+      <p className="text-sm text-muted-foreground mb-4">
         Sends a personalized reminder to every active player who hasn&apos;t picked yet this week.
       </p>
 
       {!hasOpenWeek ? (
-        <p className="text-sm text-gray-400 italic">No open week — all weeks have results entered.</p>
+        <p className="text-sm text-muted-foreground italic">No open week — all weeks have results entered.</p>
       ) : (
         <>
-          <div className="mb-4 rounded-md bg-orange-50 border border-orange-100 px-4 py-3">
-            <p className="text-sm font-medium text-orange-800">
+          <div className="mb-4 rounded-md bg-primary/10 border border-primary/20 px-4 py-3">
+            <p className="text-sm font-medium text-primary">
               Week {weekNumber}:{' '}
               <span className="font-bold">{unpickedCount}</span> of{' '}
               <span className="font-bold">{activeCount}</span> active player
@@ -65,13 +65,13 @@ export function PickReminderCard({ unpickedCount, activeCount, weekNumber, hasOp
             <button
               onClick={handleSend}
               disabled={!canSend || status === 'sending'}
-              className="rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white hover:bg-orange-600 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
             >
               {status === 'sending' ? 'Sending…' : 'Send Reminder'}
             </button>
 
             {unpickedCount === 0 && (
-              <span className="text-sm text-gray-400 italic">Everyone has picked this week.</span>
+              <span className="text-sm text-muted-foreground italic">Everyone has picked this week.</span>
             )}
 
             {resultMsg && (

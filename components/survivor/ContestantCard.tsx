@@ -45,21 +45,21 @@ export function ContestantCard({
       className={cn(
         'relative flex flex-row items-center gap-3 p-3 md:flex-col md:items-center md:gap-0 md:p-4 rounded-xl border-2 transition-all duration-200 w-full',
         // Normal selectable state
-        !isSelected && !isDisabled && mode === 'selecting' && 'bg-white border-gray-200 hover:shadow-lg hover:-translate-y-1',
+        !isSelected && !isDisabled && mode === 'selecting' && 'bg-card border-border hover:shadow-lg hover:-translate-y-1 hover:border-primary/50',
         // Selected but not yet submitted (orange)
-        isSelected && mode === 'selecting' && 'bg-orange-50 border-[#F97316] border-[3px] shadow-md',
+        isSelected && mode === 'selecting' && 'bg-primary/10 border-primary border-[3px] shadow-md',
         // Submitted pick (green locked-in)
-        isLockedIn && 'bg-green-50 border-[#16A34A] border-[3px]',
+        isLockedIn && 'bg-[#16A34A]/10 border-[#16A34A] border-[3px]',
         // Disabled (used or eliminated)
-        isDisabled && 'bg-gray-100 border-gray-200 opacity-60 cursor-not-allowed',
+        isDisabled && 'bg-muted border-border opacity-60 cursor-not-allowed',
         // Non-selected cards in submitted/locked mode: dimmed and non-clickable
-        isNonInteractive && !isDisabled && 'bg-white border-gray-200 opacity-40 pointer-events-none',
+        isNonInteractive && !isDisabled && 'bg-card border-border opacity-40 pointer-events-none',
       )}
     >
       {/* Selected checkmark — desktop only (selecting mode only) */}
       {isSelected && mode === 'selecting' && (
-        <div className="hidden md:flex absolute top-2 left-2 w-6 h-6 bg-[#F97316] rounded-full items-center justify-center">
-          <Check className="w-4 h-4 text-white" />
+        <div className="hidden md:flex absolute top-2 left-2 w-6 h-6 bg-primary rounded-full items-center justify-center">
+          <Check className="w-4 h-4 text-primary-foreground" />
         </div>
       )}
 
@@ -76,8 +76,8 @@ export function ContestantCard({
       {/* Photo or silhouette */}
       <div
         className={cn(
-          'w-14 h-14 md:w-16 md:h-16 rounded-full bg-gray-200 flex items-center justify-center md:mt-4 md:mb-3 overflow-hidden shrink-0',
-          isDisabled && !photoUrl && 'bg-gray-300',
+          'w-14 h-14 md:w-16 md:h-16 rounded-full bg-muted flex items-center justify-center md:mt-4 md:mb-3 overflow-hidden shrink-0',
+          isDisabled && !photoUrl && 'bg-muted',
         )}
       >
         {photoUrl ? (
@@ -89,7 +89,7 @@ export function ContestantCard({
             className="w-full h-full object-cover"
           />
         ) : (
-          <User className="w-8 h-8 text-gray-400" />
+          <User className="w-8 h-8 text-muted-foreground" />
         )}
       </div>
 
@@ -105,9 +105,9 @@ export function ContestantCard({
           )}
           <span
             className={cn(
-              'text-sm font-semibold text-gray-900 truncate md:text-center',
-              isUsed && 'line-through text-gray-500',
-              isEliminated && !isUsed && 'text-gray-500',
+              'text-sm font-semibold text-foreground truncate md:text-center',
+              isUsed && 'line-through text-muted-foreground',
+              isEliminated && !isUsed && 'text-muted-foreground',
             )}
           >
             {name}
@@ -116,12 +116,12 @@ export function ContestantCard({
 
         {/* Status label */}
         {isUsed && (
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-muted-foreground">
             {usedWeek ? `Used Wk ${usedWeek}` : 'Already picked'}
           </span>
         )}
         {isEliminated && !isUsed && (
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-muted-foreground">
             {eliminatedWeek ? `Eliminated Wk ${eliminatedWeek}` : 'Eliminated'}
           </span>
         )}
@@ -130,9 +130,9 @@ export function ContestantCard({
       {/* Mobile selection circle — right side indicator, hidden on desktop */}
       <div className={cn(
         'md:hidden ml-auto shrink-0 flex h-6 w-6 items-center justify-center rounded-full border-2 transition-colors',
-        isSelected ? 'border-[#F97316] bg-[#F97316]' : 'border-gray-300',
+        isSelected ? 'border-primary bg-primary' : 'border-border',
       )}>
-        {isSelected && <Check className="h-4 w-4 text-white" />}
+        {isSelected && <Check className="h-4 w-4 text-primary-foreground" />}
       </div>
 
       {/* Locked in banner */}

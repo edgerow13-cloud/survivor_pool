@@ -45,8 +45,8 @@ export default async function EmailPage() {
   return (
     <div className="max-w-2xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Email</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-2xl font-bold text-foreground">Email</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           Send messages to pool participants directly from the dashboard.
         </p>
       </div>
