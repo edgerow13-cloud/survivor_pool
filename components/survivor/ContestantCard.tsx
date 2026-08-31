@@ -43,7 +43,7 @@ export function ContestantCard({
       onClick={() => !isDisabled && mode === 'selecting' && onSelect(id)}
       disabled={isDisabled || mode !== 'selecting'}
       className={cn(
-        'relative flex flex-row items-center gap-3 p-3 md:flex-col md:items-center md:gap-0 md:p-4 rounded-xl border-2 transition-all duration-200 w-full',
+        'relative flex flex-col rounded-xl border-2 transition-all duration-200 w-full overflow-hidden',
         // Normal selectable state
         !isSelected && !isDisabled && mode === 'selecting' && 'bg-card border-border hover:shadow-lg hover:-translate-y-1 hover:border-primary/50',
         // Selected but not yet submitted (orange)
@@ -73,71 +73,75 @@ export function ContestantCard({
         </div>
       )}
 
-      {/* Photo or silhouette */}
-      <div
-        className={cn(
-          'w-14 h-14 md:w-16 md:h-16 rounded-full bg-muted flex items-center justify-center md:mt-4 md:mb-3 overflow-hidden shrink-0',
-          isDisabled && !photoUrl && 'bg-muted',
-        )}
-      >
-        {photoUrl ? (
-          <Image
-            src={photoUrl}
-            alt={name}
-            width={64}
-            height={64}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <User className="w-8 h-8 text-muted-foreground" />
-        )}
-      </div>
-
-      {/* Name + status — middle column on mobile, centered on desktop */}
-      <div className="flex-1 min-w-0 flex flex-col gap-0.5 md:items-center md:w-full">
-        <div className="flex items-center gap-1.5 min-w-0">
-          {/* Tribe dot — mobile only */}
-          {tribe && (
-            <span
-              className="md:hidden inline-block w-2.5 h-2.5 rounded-full shrink-0"
-              style={{ backgroundColor: tribe.color }}
-            />
+      {/* Main content row — photo, name/status, mobile selection circle */}
+      <div className="flex flex-row items-center gap-3 p-3 md:flex-col md:items-center md:gap-0 md:p-4">
+        {/* Photo or silhouette */}
+        <div
+          className={cn(
+            'w-16 h-16 md:w-24 md:h-24 rounded-full bg-muted flex items-center justify-center md:mt-4 md:mb-3 overflow-hidden shrink-0',
+            isDisabled && !photoUrl && 'bg-muted',
           )}
-          <span
-            className={cn(
-              'text-sm font-semibold text-foreground truncate md:text-center',
-              isUsed && 'line-through text-muted-foreground',
-              isEliminated && !isUsed && 'text-muted-foreground',
-            )}
-          >
-            {name}
-          </span>
+        >
+          {photoUrl ? (
+            <Image
+              src={photoUrl}
+              alt={name}
+              width={96}
+              height={96}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <User className="w-9 h-9 md:w-12 md:h-12 text-muted-foreground" />
+          )}
         </div>
 
-        {/* Status label */}
-        {isUsed && (
-          <span className="text-xs text-muted-foreground">
-            {usedWeek ? `Used Wk ${usedWeek}` : 'Already picked'}
-          </span>
-        )}
-        {isEliminated && !isUsed && (
-          <span className="text-xs text-muted-foreground">
-            {eliminatedWeek ? `Eliminated Wk ${eliminatedWeek}` : 'Eliminated'}
-          </span>
-        )}
+        {/* Name + status — middle column on mobile, centered on desktop */}
+        <div className="flex-1 min-w-0 flex flex-col gap-0.5 md:items-center md:w-full">
+          <div className="flex items-center gap-1.5 min-w-0">
+            {/* Tribe dot — mobile only */}
+            {tribe && (
+              <span
+                className="md:hidden inline-block w-2.5 h-2.5 rounded-full shrink-0"
+                style={{ backgroundColor: tribe.color }}
+              />
+            )}
+            <span
+              className={cn(
+                'text-sm font-semibold text-foreground truncate md:text-center',
+                isUsed && 'line-through text-muted-foreground',
+                isEliminated && !isUsed && 'text-muted-foreground',
+              )}
+            >
+              {name}
+            </span>
+          </div>
+
+          {/* Status label */}
+          {isUsed && (
+            <span className="text-xs text-muted-foreground">
+              {usedWeek ? `Used Wk ${usedWeek}` : 'Already picked'}
+            </span>
+          )}
+          {isEliminated && !isUsed && (
+            <span className="text-xs text-muted-foreground">
+              {eliminatedWeek ? `Eliminated Wk ${eliminatedWeek}` : 'Eliminated'}
+            </span>
+          )}
+        </div>
+
+        {/* Mobile selection circle — right side indicator, hidden on desktop */}
+        <div className={cn(
+          'md:hidden ml-auto shrink-0 flex h-6 w-6 items-center justify-center rounded-full border-2 transition-colors',
+          isSelected ? 'border-primary bg-primary' : 'border-border',
+        )}>
+          {isSelected && <Check className="h-4 w-4 text-primary-foreground" />}
+        </div>
       </div>
 
-      {/* Mobile selection circle — right side indicator, hidden on desktop */}
-      <div className={cn(
-        'md:hidden ml-auto shrink-0 flex h-6 w-6 items-center justify-center rounded-full border-2 transition-colors',
-        isSelected ? 'border-primary bg-primary' : 'border-border',
-      )}>
-        {isSelected && <Check className="h-4 w-4 text-primary-foreground" />}
-      </div>
-
-      {/* Locked in banner */}
+      {/* Locked in banner — sits below the content in normal flow so it never
+          covers the name/status text (previously absolutely positioned) */}
       {isLockedIn && (
-        <div className="absolute bottom-0 left-0 right-0 bg-[#16A34A] text-white text-xs font-medium py-1.5 rounded-b-lg flex items-center justify-center gap-1">
+        <div className="bg-[#16A34A] text-white text-xs font-medium py-1.5 flex items-center justify-center gap-1">
           <Check className="w-3 h-3" />
           Locked in
         </div>
