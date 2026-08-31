@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAdminClient } from '@/lib/supabase/admin'
 import { getActiveSeasonId } from '@/lib/get-active-season'
+import { POOL_START_WEEK } from '@/lib/pool-config'
 
 // POST — upsert the authenticated user's season winner prediction
 export async function POST(request: NextRequest) {
@@ -35,17 +36,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'No active season is configured' }, { status: 500 })
   }
 
-  // Server-side deadline enforcement: look up Episode 3's air date
-  const { data: ep3 } = await db
+  // Server-side deadline enforcement: winner picks lock when the pool's
+  // first week (Episode 2) airs. Uses the shared POOL_START_WEEK constant (lib/pool-config.ts).
+  const { data: poolStartWeek } = await db
     .from('weeks')
     .select('episode_date')
     .eq('season_id', seasonId)
-    .eq('week_number', 3)
+    .eq('week_number', POOL_START_WEEK)
     .maybeSingle()
 
-  if (ep3) {
+  if (poolStartWeek) {
     const now = new Date()
-    const deadline = new Date(ep3.episode_date as string)
+    const deadline = new Date(poolStartWeek.episode_date as string)
     if (now >= deadline) {
       return NextResponse.json(
         { error: 'The winner pick deadline has passed — your prediction is locked' },

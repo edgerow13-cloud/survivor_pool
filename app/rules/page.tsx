@@ -38,7 +38,7 @@ export default async function RulesPage() {
             <div className="bg-card rounded-xl border border-border divide-y divide-border">
               <Rule>
                 The buy-in is <strong>$10 per player</strong>, collected by the commissioner
-                before the Episode 3 deadline. Winner takes the pot.
+                before the Episode 2 deadline. Winner takes the pot.
               </Rule>
               <Rule>
                 Each week, every active pool participant picks one Survivor castaway they think
@@ -49,8 +49,8 @@ export default async function RulesPage() {
                 that episode — you&apos;re eliminated from the pool.
               </Rule>
               <Rule>
-                The pool runs from <strong>Episode 3</strong> onwards. Episodes 1 and 2 are
-                pre-pool; no picks were collected for those weeks.
+                The pool runs from <strong>Episode 2</strong> onwards. Episode 1 is
+                pre-pool; no picks were collected for that week.
               </Rule>
               <Rule>
                 The last player (or players) still standing at the end of the season wins. If all
@@ -136,14 +136,14 @@ export default async function RulesPage() {
             </h2>
             <div className="bg-card rounded-xl border border-border divide-y divide-border">
               <Rule label="Pregame prediction required">
-                Before the Episode 3 deadline, every player must submit a pregame prediction for
+                Before the Episode 2 deadline, every player must submit a pregame prediction for
                 who they think will win {season ? `Season ${season.season_number}` : 'the season'}.
                 This is your &ldquo;winner pick.&rdquo;
               </Rule>
               <Rule label="Winner picks are public">
                 Your winner pick is visible to all players immediately upon submission — it&apos;s
                 a public commitment, not a hidden pick. You can change it freely before the
-                Episode 3 deadline. After that, it locks permanently.
+                Episode 2 deadline. After that, it locks permanently.
               </Rule>
               <Rule label="Tiebreaker">
                 If all remaining active players are eliminated in the same episode, the player

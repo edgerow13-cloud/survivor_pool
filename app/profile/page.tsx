@@ -28,7 +28,7 @@ interface ProfileData {
   user: { id: string; name: string; avatar_url: string | null }
   contestants: ContestantOption[]
   winnerPick: { contestant_id: string } | null
-  ep3Deadline: string | null
+  winnerPickDeadline: string | null
 }
 
 function Spinner() {
@@ -216,8 +216,8 @@ export default function ProfilePage() {
 
   if (!profileData) return null
 
-  const { contestants, ep3Deadline } = profileData
-  const isPickLocked = ep3Deadline !== null && new Date() >= new Date(ep3Deadline)
+  const { contestants, winnerPickDeadline } = profileData
+  const isPickLocked = winnerPickDeadline !== null && new Date() >= new Date(winnerPickDeadline)
 
   const filtered = contestants.filter((c) =>
     c.name.toLowerCase().includes(inputValue.toLowerCase())
@@ -253,8 +253,8 @@ export default function ProfilePage() {
     setPickError(null)
   }
 
-  const deadlineLabel = ep3Deadline
-    ? new Date(ep3Deadline).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })
+  const deadlineLabel = winnerPickDeadline
+    ? new Date(winnerPickDeadline).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })
     : null
 
   return (
@@ -362,7 +362,7 @@ export default function ProfilePage() {
                 {isPickLocked
                   ? 'The pick window has closed. Your prediction is locked in.'
                   : deadlineLabel
-                    ? `Pick who you think will win ${seasonLabel}. Locks when Episode 3 airs on ${deadlineLabel}.`
+                    ? `Pick who you think will win ${seasonLabel}. Locks when Episode 2 airs on ${deadlineLabel}.`
                     : `Pick who you think will win ${seasonLabel}.`}
               </CardDescription>
             </CardHeader>

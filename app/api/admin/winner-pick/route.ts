@@ -7,7 +7,7 @@ import { getActiveSeasonId } from '@/lib/get-active-season'
  * Commissioner-only winner pick upsert.
  * Identical to the player-facing /api/winner-pick route except:
  *   - Requires commissioner role (validated via requireCommissioner)
- *   - No Episode 3 deadline check — commissioner can update any player's pick at any time
+ *   - No deadline check — commissioner can update any player's pick at any time
  *   - Operates on targetUserId, not the commissioner's own userId
  *   - contestantId = null clears the pick (deletes the row)
  */

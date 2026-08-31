@@ -32,9 +32,8 @@ import {
 import { Label } from '@/components/ui/label'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
+import { POOL_START_WEEK } from '@/lib/pool-config'
 import type { Week, Contestant, WeekElimination, User } from '@/types/database'
-
-const POOL_START_WEEK = 3
 
 interface Props {
   weeks: Week[]

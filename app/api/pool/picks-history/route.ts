@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAdminClient } from '@/lib/supabase/admin'
 import { getActiveSeasonId } from '@/lib/get-active-season'
+import { POOL_START_WEEK } from '@/lib/pool-config'
 
 export async function POST(request: NextRequest) {
   const body = await request.json() as { userId?: string }
@@ -38,7 +39,7 @@ export async function POST(request: NextRequest) {
     { data: tribes },
     { data: weekEliminations },
     { data: winnerPicksRaw },
-    { data: ep3Week },
+    { data: poolStartWeek },
   ] = await Promise.all([
     db.from('weeks').select('*').eq('season_id', seasonId).order('week_number', { ascending: true }),
     db.from('users').select('*').order('name'),
@@ -48,7 +49,8 @@ export async function POST(request: NextRequest) {
     db.from('tribes').select('*').eq('season_id', seasonId),
     db.from('week_eliminations').select('*'),
     db.from('winner_picks').select('user_id, contestant_id').eq('season_id', seasonId),
-    db.from('weeks').select('episode_date').eq('season_id', seasonId).eq('week_number', 3).maybeSingle(),
+    // Winner picks lock when the pool's first week (Episode 2) airs. Uses the shared POOL_START_WEEK constant (lib/pool-config.ts).
+    db.from('weeks').select('episode_date').eq('season_id', seasonId).eq('week_number', POOL_START_WEEK).maybeSingle(),
   ])
 
   // Filter picks: show other players' picks once week is effectively locked
@@ -63,11 +65,11 @@ export async function POST(request: NextRequest) {
     (p) => visibleWeekIds.has(p.week_id) || p.user_id === userId
   )
 
-  // Filter winner picks: hide other players' picks until the Ep3 deadline has passed
-  const ep3DeadlinePassed = ep3Week?.episode_date
-    ? new Date() >= new Date(ep3Week.episode_date)
+  // Filter winner picks: hide other players' picks until the winner-pick deadline has passed
+  const winnerPickDeadlinePassed = poolStartWeek?.episode_date
+    ? new Date() >= new Date(poolStartWeek.episode_date)
     : false
-  const filteredWinnerPicks = ep3DeadlinePassed
+  const filteredWinnerPicks = winnerPickDeadlinePassed
     ? (winnerPicksRaw ?? [])
     : (winnerPicksRaw ?? []).filter((wp) => wp.user_id === userId)
 
@@ -81,6 +83,6 @@ export async function POST(request: NextRequest) {
     currentUserId: userId,
     weekEliminations: weekEliminations ?? [],
     winnerPicks: filteredWinnerPicks,
-    ep3Deadline: ep3Week?.episode_date ?? null,
+    winnerPickDeadline: poolStartWeek?.episode_date ?? null,
   })
 }

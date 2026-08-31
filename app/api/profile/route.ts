@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAdminClient } from '@/lib/supabase/admin'
 import { getActiveSeasonId } from '@/lib/get-active-season'
+import { POOL_START_WEEK } from '@/lib/pool-config'
 
 // POST — load profile page data
 export async function POST(request: NextRequest) {
@@ -34,13 +35,14 @@ export async function POST(request: NextRequest) {
     { data: contestantsRaw },
     { data: tribesRaw },
     { data: tribeHistoryRaw },
-    { data: ep3Week },
+    { data: poolStartWeek },
     { data: winnerPick },
   ] = await Promise.all([
     db.from('contestants').select('id, name, is_eliminated').eq('season_id', seasonId).eq('is_eliminated', false).order('name'),
     db.from('tribes').select('id, name, color').eq('season_id', seasonId),
     db.from('contestant_tribe_history').select('contestant_id, tribe_id, week_number'),
-    db.from('weeks').select('episode_date').eq('season_id', seasonId).eq('week_number', 3).maybeSingle(),
+    // Winner picks lock when the pool's first week (Episode 2) airs. Uses the shared POOL_START_WEEK constant (lib/pool-config.ts).
+    db.from('weeks').select('episode_date').eq('season_id', seasonId).eq('week_number', POOL_START_WEEK).maybeSingle(),
     db.from('winner_picks').select('contestant_id').eq('user_id', userId).eq('season_id', seasonId).maybeSingle(),
   ])
 
@@ -69,7 +71,7 @@ export async function POST(request: NextRequest) {
     user: { id: user.id, name: user.name, avatar_url: user.avatar_url ?? null },
     contestants,
     winnerPick: winnerPick ?? null,
-    ep3Deadline: ep3Week?.episode_date ?? null,
+    winnerPickDeadline: poolStartWeek?.episode_date ?? null,
   })
 }
 

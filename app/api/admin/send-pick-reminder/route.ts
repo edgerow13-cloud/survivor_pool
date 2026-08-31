@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireCommissioner } from '@/lib/require-commissioner'
 import { getAdminClient } from '@/lib/supabase/admin'
 import { getActiveSeasonId } from '@/lib/get-active-season'
+import { POOL_START_WEEK } from '@/lib/pool-config'
 import { sendEmail } from '@/lib/email'
 
 function formatDeadline(dateStr: string): string {
@@ -43,12 +44,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'No active season is configured' }, { status: 500 })
   }
 
-  // Find current open week (earliest not-yet-resolved week)
+  // Find current open week (earliest not-yet-resolved week at or after the
+  // pool's start week — earlier "pre-pool" weeks never collect picks, so
+  // there's nothing to remind anyone about)
   const { data: openWeek, error: weekError } = await db
     .from('weeks')
     .select('id, week_number, episode_date')
     .eq('season_id', seasonId)
     .eq('is_results_entered', false)
+    .gte('week_number', POOL_START_WEEK)
     .order('week_number', { ascending: true })
     .limit(1)
     .maybeSingle()

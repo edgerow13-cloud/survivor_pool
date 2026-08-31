@@ -117,7 +117,7 @@ One row per user per week.
 
 ### `winner_picks`
 Each player's pregame prediction for who will win Survivor 50. Can be
-submitted or changed any number of times before the Episode 3 deadline,
+submitted or changed any number of times before the Episode 2 deadline,
 after which it locks for players. Visible to all authenticated users
 immediately upon submission — this is a public commitment, not a hidden
 pick. Used as the tiebreaker if all remaining pool players are eliminated
@@ -145,9 +145,9 @@ in the same week.
 8. **Eliminated users can still view** the pool (read-only). They cannot submit picks.
 9. **Multiple users can pick the same contestant** in any given week.
 10. **Pool ends naturally** when only one active player remains (or all remaining players are eliminated in the same week — tiebreaker resolves via winner picks, see rule 13).
-11. **Pool starts at Episode 3.** Episodes 1 and 2 can be backfilled by commissioner but are not required. No pool picks exist before Episode 3.
+11. **Pool starts at Episode 2.** Episode 1 can be backfilled by commissioner but is not required. No pool picks exist before Episode 2. (This start week is a shared constant, `POOL_START_WEEK` in `lib/pool-config.ts` — update it, not a scattered literal, if a future season starts elsewhere.)
 12. **Tribe assignments are week-specific.** The tribe shown for a contestant in the picks grid reflects their tribe during that episode week, not their original or current tribe. Commissioner updates tribe assignments whenever a swap, merge, or dissolve occurs.
-13. **Winner pick tiebreaker.** Before the Episode 3 deadline, every player must submit one pregame prediction for who will win Survivor 50. This pick is public and immediately visible to all players. It can be changed any number of times before the Episode 3 deadline, after which it locks permanently for players (commissioner can update any player's winner pick at any time with no deadline restriction). If all remaining active players are eliminated in the same week, the player whose winner pick contestant survives the longest in the game wins the pool. If two players picked the same contestant (or both picked contestants eliminated the same week), the player whose winner pick has the earlier `updated_at` timestamp wins. Players who have not submitted a winner pick before the Episode 3 deadline are ineligible to win via tiebreaker — commissioner discretion applies.
+13. **Winner pick tiebreaker.** Before the Episode 2 deadline, every player must submit one pregame prediction for who will win the season. This pick is public and immediately visible to all players. It can be changed any number of times before the Episode 2 deadline, after which it locks permanently for players (commissioner can update any player's winner pick at any time with no deadline restriction). If all remaining active players are eliminated in the same week, the player whose winner pick contestant survives the longest in the game wins the pool. If two players picked the same contestant (or both picked contestants eliminated the same week), the player whose winner pick has the earlier `updated_at` timestamp wins. Players who have not submitted a winner pick before the Episode 2 deadline are ineligible to win via tiebreaker — commissioner discretion applies.
 
 ---
 
@@ -163,7 +163,7 @@ The commissioner has a dedicated admin dashboard (`/admin`) with the ability to:
 - Seed/edit contestant data (name, elimination status)
 - Manage tribes: create tribes, set tribe colors, rename tribes
 - Update tribe assignments when a swap, merge, or dissolve occurs (sets new `contestant_tribe_history` rows for affected contestants at the current week number)
-- Backfill past weeks (Episodes 1–2) with historical results
+- Backfill pre-pool weeks (before Episode 2) with historical results
 - Update any player's winner pick at any point in the season (no deadline restriction for commissioner)
 - Update any player's display name and avatar via `/admin/players`
 
@@ -177,7 +177,7 @@ The commissioner has a dedicated admin dashboard (`/admin`) with the ability to:
 | `/login` | Public | Email lookup login page |
 | `/pool` | Authenticated | Main view: current week pick submission + picks grid |
 | `/pool/picks` | Authenticated | Full picks history grid (all weeks × all players); winner pick shown as first column after player name |
-| `/profile` | Authenticated | Player profile: update display name, upload avatar photo, submit/change winner pick (before Episode 3 deadline) |
+| `/profile` | Authenticated | Player profile: update display name, upload avatar photo, submit/change winner pick (before Episode 2 deadline) |
 | `/admin` | Commissioner only | Admin dashboard |
 | `/admin/weeks` | Commissioner only | Manage weeks and enter results |
 | `/admin/players` | Commissioner only | Add/edit players, manage overrides, update any player's winner pick |
@@ -195,7 +195,7 @@ The commissioner has a dedicated admin dashboard (`/admin`) with the ability to:
   - If the picked contestant is still active: normal display
   - If the picked contestant has been eliminated: name with a red "Out Wk N" badge
   - If no winner pick submitted yet: shows "—"
-  - For the viewing user's own row only — before Episode 3 deadline: shows a "Change →" link to `/profile`; after deadline: read-only, no link
+  - For the viewing user's own row only — before Episode 2 deadline: shows a "Change →" link to `/profile`; after deadline: read-only, no link
 - **Weekly pick cells:** Contestant name with a colored dot indicating their tribe **that week** (looked up from `contestant_tribe_history` for that week number)
 - **Cell color coding:**
   - Green background = that contestant survived (pick was safe)
@@ -231,9 +231,9 @@ to all authenticated users.
 **Winner Pick**
 - A searchable dropdown of all non-eliminated contestants, each showing a
   tribe color dot
-- Can be submitted or changed freely before the Episode 3 deadline
-- After the Episode 3 deadline: field is read-only with note
-  "Winner picks locked at Episode 3 deadline"
+- Can be submitted or changed freely before the Episode 2 deadline
+- After the Episode 2 deadline: field is read-only with note
+  "Winner picks locked at Episode 2 deadline"
 - If the player hasn't submitted yet and deadline has not passed: show a
   prominent prompt encouraging them to pick before it locks
 
@@ -423,7 +423,7 @@ See the Player Profile section for RLS policy details.
 - Do NOT give the `SUPABASE_SERVICE_ROLE_KEY` to the client bundle
 - Do NOT use `localStorage` for session data — use `sessionStorage` so sessions clear when the browser is closed
 - Do NOT create invite links or join request flows — player management is commissioner-only via `/admin/players`
-- Do NOT allow a player to change their winner pick after the Episode 3 deadline (commissioner override has no deadline restriction)
+- Do NOT allow a player to change their winner pick after the Episode 2 deadline (commissioner override has no deadline restriction)
 - Do NOT allow a winner pick of a contestant who is already eliminated at time of submission
-- Do NOT allow a player to submit a winner pick after the Episode 3 deadline
+- Do NOT allow a player to submit a winner pick after the Episode 2 deadline
 - Do NOT store contestant "current tribe" as a single field on winner_picks display — resolve via contestant_tribe_history like all other tribe lookups

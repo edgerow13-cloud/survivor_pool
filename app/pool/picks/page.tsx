@@ -7,6 +7,7 @@ import { Lock, Check, X, Settings } from 'lucide-react'
 import Image from 'next/image'
 import { useAuth } from '@/lib/auth-context'
 import { useActiveSeason } from '@/hooks/use-active-season'
+import { POOL_START_WEEK } from '@/lib/pool-config'
 import { Header } from '@/components/Header'
 import { UserAvatar } from '@/components/UserAvatar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -29,7 +30,7 @@ interface PicksHistoryData {
   currentUserId: string
   weekEliminations: WeekElimination[]
   winnerPicks: WinnerPickRow[]
-  ep3Deadline: string | null
+  winnerPickDeadline: string | null
 }
 
 function formatMonDay(isoString: string): string {
@@ -84,7 +85,7 @@ function WinnerPickCell({
   const cellBase = 'px-3 py-3 min-w-[150px] border-r border-border'
   const showChangeLink = isOwnRow && !isPickLocked
 
-  // Before Ep3 deadline: hide other players' picks entirely
+  // Before the winner-pick deadline (Episode 2): hide other players' picks entirely
   if (!isPickLocked && !isOwnRow) {
     return (
       <td className={`${cellBase} bg-muted`}>
@@ -420,7 +421,7 @@ export default function PicksHistoryPage() {
 
   if (!data) return null
 
-  const { weeks, allUsers, allPicks, contestants, tribeHistory, tribes, currentUserId, weekEliminations, winnerPicks, ep3Deadline } = data
+  const { weeks, allUsers, allPicks, contestants, tribeHistory, tribes, currentUserId, weekEliminations, winnerPicks, winnerPickDeadline } = data
 
   const tribeMap: Record<string, Tribe> = Object.fromEntries(tribes.map((t) => [t.id, t]))
   const contestantMap: Record<string, Contestant> = Object.fromEntries(
@@ -461,8 +462,10 @@ export default function PicksHistoryPage() {
       return a.name.localeCompare(b.name)
     })
 
-  // The "current" week is the first unresolved week (weeks are sorted ascending)
-  const currentWeekEntry = weeks.find((w) => !w.is_results_entered)
+  // The "current" week is the first unresolved week at or after the pool's
+  // start week (weeks are sorted ascending) — earlier "pre-pool" weeks are
+  // never pickable, so they're never "current" either.
+  const currentWeekEntry = weeks.find((w) => !w.is_results_entered && w.week_number >= POOL_START_WEEK)
   const currentWeekNumber = currentWeekEntry?.week_number ?? null
 
   function isWeekEffectivelyLocked(week: Week): boolean {
@@ -508,8 +511,8 @@ export default function PicksHistoryPage() {
     }
   }
 
-  // Episode 3 deadline determines whether winner pick is editable
-  const isPickLocked = ep3Deadline !== null && new Date() >= new Date(ep3Deadline)
+  // Winner-pick deadline (Episode 2) determines whether it is editable
+  const isPickLocked = winnerPickDeadline !== null && new Date() >= new Date(winnerPickDeadline)
 
   const frozenHeaderClass =
     "sticky left-0 z-20 bg-muted relative after:content-[''] after:absolute after:inset-y-0 after:right-0 after:w-5 after:bg-gradient-to-r after:from-muted after:to-[rgba(255,255,255,0)] after:pointer-events-none"

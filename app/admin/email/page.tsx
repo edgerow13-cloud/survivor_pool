@@ -1,5 +1,6 @@
 import { getAdminClient } from '@/lib/supabase/admin'
 import { getActiveSeasonId } from '@/lib/get-active-season'
+import { POOL_START_WEEK } from '@/lib/pool-config'
 import { BlastEmailForm } from './BlastEmailForm'
 import { PickReminderCard } from './PickReminderCard'
 
@@ -11,11 +12,14 @@ export default async function EmailPage() {
 
   const [{ data: users }, { data: openWeek }] = await Promise.all([
     db.from('users').select('id, name, email, status').in('status', ['active', 'eliminated']).order('name', { ascending: true }),
+    // Mirrors app/api/admin/send-pick-reminder's "open week" lookup so this
+    // card always names the same week the reminder button actually targets.
     db
       .from('weeks')
       .select('id, week_number')
       .eq('season_id', seasonId)
       .eq('is_results_entered', false)
+      .gte('week_number', POOL_START_WEEK)
       .order('week_number', { ascending: true })
       .limit(1)
       .maybeSingle(),

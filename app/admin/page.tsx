@@ -1,5 +1,6 @@
 import { getAdminClient } from '@/lib/supabase/admin'
 import { getActiveSeasonId } from '@/lib/get-active-season'
+import { POOL_START_WEEK } from '@/lib/pool-config'
 import { Card, CardContent } from '@/components/ui/card'
 import { WeekStatusCard, type PlayerPickStatus } from '@/components/admin/WeekStatusCard'
 import { QuickActionsCard } from '@/components/admin/QuickActionsCard'
@@ -45,11 +46,15 @@ export default async function AdminOverviewPage() {
       .select('*', { count: 'exact', head: true })
       .eq('season_id', seasonId)
       .eq('is_eliminated', false),
+    // "Current week" here drives the pick-status widget below (who has/
+    // hasn't picked), so pre-pool weeks — which never collect picks — are
+    // excluded, same as the player-facing pool page.
     db
       .from('weeks')
       .select('*')
       .eq('season_id', seasonId)
       .eq('is_results_entered', false)
+      .gte('week_number', POOL_START_WEEK)
       .order('week_number', { ascending: true })
       .limit(1),
   ])

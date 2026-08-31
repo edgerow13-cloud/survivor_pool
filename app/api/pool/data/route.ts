@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAdminClient } from '@/lib/supabase/admin'
 import { getActiveSeasonId } from '@/lib/get-active-season'
+import { POOL_START_WEEK } from '@/lib/pool-config'
 
 export async function POST(request: NextRequest) {
   const body = await request.json() as { userId?: string }
@@ -45,8 +46,12 @@ export async function POST(request: NextRequest) {
     db.from('week_eliminations').select('*'),
   ])
 
-  // Current week = first unresolved week (ascending order)
-  const currentWeek = weeks ? (weeks.find((w) => !w.is_results_entered) ?? null) : null
+  // Current week = first unresolved week at or after the pool's start week
+  // (ascending order) — earlier "pre-pool" weeks may exist for reference
+  // but are never pickable.
+  const currentWeek = weeks
+    ? (weeks.find((w) => !w.is_results_entered && w.week_number >= POOL_START_WEEK) ?? null)
+    : null
   const seasonWeekIds = (weeks ?? []).map((w) => w.id)
 
   const [{ data: userPickData }, { data: usedPicksData }, { data: weekAllPicksData }, { data: winnerPickData }] =

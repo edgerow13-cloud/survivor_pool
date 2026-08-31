@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import { useActiveSeason } from '@/hooks/use-active-season'
+import { POOL_START_WEEK } from '@/lib/pool-config'
 import { Header } from '@/components/Header'
 import { CountdownTimer } from '@/components/survivor/CountdownTimer'
 import PickForm from './PickForm'
@@ -135,8 +136,10 @@ export default function PoolPage() {
 
   const { me, contestants, tribes, tribeHistory, weeks, userPick, usedContestantIds, usedPicks, weekAllPicks, allUsers, weekEliminations, winnerPick } = data
 
-  // First unresolved week
-  const currentWeek = weeks.find((w: Week) => !w.is_results_entered) ?? null
+  // First unresolved week at or after the pool's start week — earlier
+  // "pre-pool" weeks may exist for reference but are never pickable.
+  const currentWeek =
+    weeks.find((w: Week) => !w.is_results_entered && w.week_number >= POOL_START_WEEK) ?? null
 
   // Build tribe lookup
   const tribeMap = Object.fromEntries(tribes.map((t: Tribe) => [t.id, t]))
@@ -160,10 +163,11 @@ export default function PoolPage() {
 
   const contestantMap = Object.fromEntries(contestants.map((c: Contestant) => [c.id, c]))
 
-  // Show winner pick banner if: active player, no winner pick submitted, Ep3 deadline not yet passed
-  const ep3Week = weeks.find((w: Week) => w.week_number === 3) ?? null
-  const ep3DeadlinePassed = ep3Week ? Date.now() >= new Date(ep3Week.episode_date).getTime() : false
-  const showWinnerPickBanner = me.status === 'active' && !winnerPick && !ep3DeadlinePassed
+  // Show winner pick banner if: active player, no winner pick submitted,
+  // winner-pick deadline (Episode 2, the pool's first week) not yet passed
+  const poolStartWeek = weeks.find((w: Week) => w.week_number === POOL_START_WEEK) ?? null
+  const winnerPickDeadlinePassed = poolStartWeek ? Date.now() >= new Date(poolStartWeek.episode_date).getTime() : false
+  const showWinnerPickBanner = me.status === 'active' && !winnerPick && !winnerPickDeadlinePassed
 
   // Map contestant ID → week number it was previously picked (for "Used Wk N" display)
   const weekIdToNumber = Object.fromEntries(weeks.map((w: Week) => [w.id, w.week_number]))
@@ -218,9 +222,9 @@ export default function PoolPage() {
     <div className="bg-primary/10 border border-primary/25 rounded-lg px-4 py-3 flex items-start gap-3">
       <span className="text-primary text-lg leading-none mt-0.5">!</span>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-foreground">Submit your winner pick before Episode 3</p>
+        <p className="text-sm font-semibold text-foreground">Submit your winner pick before Episode 2</p>
         <p className="text-sm text-foreground/80 mt-0.5">
-          Every player must predict who will win {seasonLabel}. This locks at the Episode 3
+          Every player must predict who will win {seasonLabel}. This locks at the Episode 2
           deadline and is used as a tiebreaker.{' '}
           <a href="/profile" className="underline font-medium text-primary hover:text-primary/80">
             Go to your profile to submit →
