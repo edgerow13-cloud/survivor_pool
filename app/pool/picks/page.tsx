@@ -514,6 +514,16 @@ export default function PicksHistoryPage() {
   // Winner-pick deadline (Episode 2) determines whether it is editable
   const isPickLocked = winnerPickDeadline !== null && new Date() >= new Date(winnerPickDeadline)
 
+  // Winner-pick reminder banner: only during the pool's start week
+  // (Episode 2), only for the active player viewing this page, and only
+  // if they haven't submitted a winner pick yet.
+  const me = allUsers.find((u) => u.id === currentUserId)
+  const showWinnerPickBanner =
+    me?.status === 'active' &&
+    currentWeekNumber === POOL_START_WEEK &&
+    !winnerPickByUserId[currentUserId]
+  const seasonLabel = season ? `Season ${season.seasonNumber}` : 'the season'
+
   const frozenHeaderClass =
     "sticky left-0 z-20 bg-muted relative after:content-[''] after:absolute after:inset-y-0 after:right-0 after:w-5 after:bg-gradient-to-r after:from-muted after:to-[rgba(255,255,255,0)] after:pointer-events-none"
   const frozenCellClass = (isElim: boolean) =>
@@ -525,6 +535,22 @@ export default function PicksHistoryPage() {
 
       <main className="flex-1">
         <div className="max-w-full mx-auto px-4 py-6">
+          {showWinnerPickBanner && (
+            <div className="mb-6 bg-primary/10 border border-primary/25 rounded-lg px-4 py-3 flex items-start gap-3">
+              <span className="text-primary text-lg leading-none mt-0.5">!</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-foreground">Submit your winner pick before Episode 2</p>
+                <p className="text-sm text-foreground/80 mt-0.5">
+                  Every player must predict who will win {seasonLabel}. This locks at the Episode 2
+                  deadline and is used as a tiebreaker.{' '}
+                  <Link href="/profile" className="underline font-medium text-primary hover:text-primary/80">
+                    Go to your profile to submit →
+                  </Link>
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Page title */}
           <div className="mb-6">
             <span className="eyebrow">
