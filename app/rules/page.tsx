@@ -140,10 +140,11 @@ export default async function RulesPage() {
                 who they think will win {season ? `Season ${season.season_number}` : 'the season'}.
                 This is your &ldquo;winner pick.&rdquo;
               </Rule>
-              <Rule label="Winner picks are public">
-                Your winner pick is visible to all players immediately upon submission — it&apos;s
-                a public commitment, not a hidden pick. You can change it freely before the
-                Episode 2 deadline. After that, it locks permanently.
+              <Rule label="Winner picks stay hidden until they lock">
+                Just like a weekly pick, nobody else can see your winner pick until it locks —
+                you can only ever see your own. You can change it freely before the Episode 2
+                deadline. Once it locks, everyone&apos;s winner pick is revealed to the whole
+                pool for the rest of the season.
               </Rule>
               <Rule label="Tiebreaker">
                 If all remaining active players are eliminated in the same episode, the player
@@ -173,6 +174,11 @@ export default async function RulesPage() {
               </Rule>
               <Rule>
                 Picks from previous weeks are always visible in the full picks grid.
+              </Rule>
+              <Rule>
+                The same rule applies to <strong>winner picks</strong>: hidden from everyone but
+                you until the Episode 2 deadline, then revealed for the whole pool for the rest
+                of the season.
               </Rule>
             </div>
           </section>

@@ -116,12 +116,13 @@ One row per user per week.
 - UNIQUE constraint on (user_id, week_id)
 
 ### `winner_picks`
-Each player's pregame prediction for who will win Survivor 50. Can be
+Each player's pregame prediction for who will win the season. Can be
 submitted or changed any number of times before the Episode 2 deadline,
-after which it locks for players. Visible to all authenticated users
-immediately upon submission — this is a public commitment, not a hidden
-pick. Used as the tiebreaker if all remaining pool players are eliminated
-in the same week.
+after which it locks for players. Hidden from other players — like a
+weekly pick — until the Episode 2 deadline passes, at which point every
+player's winner pick is revealed to everyone for the rest of the season.
+A player can always see their own pick. Used as the tiebreaker if all
+remaining pool players are eliminated in the same week.
 - `id` (uuid, PK)
 - `user_id` (uuid, FK → users, UNIQUE) — one winner pick per player
 - `contestant_id` (uuid, FK → contestants)
@@ -147,7 +148,7 @@ in the same week.
 10. **Pool ends naturally** when only one active player remains (or all remaining players are eliminated in the same week — tiebreaker resolves via winner picks, see rule 13).
 11. **Pool starts at Episode 2.** Episode 1 can be backfilled by commissioner but is not required. No pool picks exist before Episode 2. (This start week is a shared constant, `POOL_START_WEEK` in `lib/pool-config.ts` — update it, not a scattered literal, if a future season starts elsewhere.)
 12. **Tribe assignments are week-specific.** The tribe shown for a contestant in the picks grid reflects their tribe during that episode week, not their original or current tribe. Commissioner updates tribe assignments whenever a swap, merge, or dissolve occurs.
-13. **Winner pick tiebreaker.** Before the Episode 2 deadline, every player must submit one pregame prediction for who will win the season. This pick is public and immediately visible to all players. It can be changed any number of times before the Episode 2 deadline, after which it locks permanently for players (commissioner can update any player's winner pick at any time with no deadline restriction). If all remaining active players are eliminated in the same week, the player whose winner pick contestant survives the longest in the game wins the pool. If two players picked the same contestant (or both picked contestants eliminated the same week), the player whose winner pick has the earlier `updated_at` timestamp wins. Players who have not submitted a winner pick before the Episode 2 deadline are ineligible to win via tiebreaker — commissioner discretion applies.
+13. **Winner pick tiebreaker.** Before the Episode 2 deadline, every player must submit one pregame prediction for who will win the season. Like a weekly pick, this stays hidden from other players until it locks — a player only ever sees their own winner pick. It can be changed any number of times before the Episode 2 deadline, after which it locks permanently for players (commissioner can update any player's winner pick at any time with no deadline restriction) and every player's pick is revealed to everyone for the rest of the season. If all remaining active players are eliminated in the same week, the player whose winner pick contestant survives the longest in the game wins the pool. If two players picked the same contestant (or both picked contestants eliminated the same week), the player whose winner pick has the earlier `updated_at` timestamp wins. Players who have not submitted a winner pick before the Episode 2 deadline are ineligible to win via tiebreaker — commissioner discretion applies.
 
 ---
 
@@ -191,6 +192,10 @@ The commissioner has a dedicated admin dashboard (`/admin`) with the ability to:
 - **Columns:** Winner pick column first, then week numbers
 - **Winner pick column:**
   - Header: "🏆 Winner Pick"
+  - Before the Episode 2 deadline: other players' winner picks are hidden
+    (shows a lock icon) — a player can only ever see their own row's pick.
+    After the deadline, everyone's winner pick is revealed for every row,
+    for the rest of the season.
   - Shows each player's predicted winner with a tribe color dot (current tribe, not week-specific)
   - If the picked contestant is still active: normal display
   - If the picked contestant has been eliminated: name with a red "Out Wk N" badge
