@@ -20,7 +20,7 @@ function formatDeadline(dateStr: string): string {
 
 function buildReminderHtml(name: string, weekNumber: number, deadline: string): string {
   const deadlineStr = formatDeadline(deadline)
-  const poolUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://pool.eddiegerow.com'
+  const poolUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://outlast.eddiegerow.com'
   return `
 <p>Hey ${name},</p>
 <p>Don't forget to submit your Outlast pool pick for <strong>Week ${weekNumber}</strong>!</p>

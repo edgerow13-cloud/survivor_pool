@@ -268,7 +268,7 @@ to all authenticated users.
 - There is no self-signup or invite link flow.
 - The commissioner adds players directly via `/admin/players` by entering their name and email.
 - Players are immediately set to `status = 'active'` when added.
-- The commissioner notifies players out-of-band (text, group chat, etc.) that they can log in at pool.eddiegerow.com.
+- The commissioner notifies players out-of-band (text, group chat, etc.) that they can log in at outlast.eddiegerow.com.
 - To remove access, the commissioner sets a player's status to `inactive` (do not delete rows).
 
 ### Access Rules
@@ -403,7 +403,7 @@ Tribe assignments will need to be updated when swaps or the merge occur.
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=   # Server-side only, never exposed to client
-NEXT_PUBLIC_APP_URL=         # e.g. https://pool.eddiegerow.com
+NEXT_PUBLIC_APP_URL=         # e.g. https://outlast.eddiegerow.com (canonical domain; pool.eddiegerow.com redirects here)
 ```
 
 No email provider is required. No Supabase Auth configuration is needed.

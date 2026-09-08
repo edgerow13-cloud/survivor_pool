@@ -15,6 +15,18 @@ const nextConfig: NextConfig = {
         ]
       : [],
   },
+  async redirects() {
+    // outlast.eddiegerow.com is the canonical domain. pool.eddiegerow.com keeps
+    // working for old links/bookmarks but always redirects over to it.
+    return [
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'pool.eddiegerow.com' }],
+        destination: 'https://outlast.eddiegerow.com/:path*',
+        permanent: true,
+      },
+    ]
+  },
 };
 
 export default nextConfig;

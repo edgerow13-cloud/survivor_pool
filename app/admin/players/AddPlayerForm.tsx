@@ -81,7 +81,7 @@ export default function AddPlayerForm() {
       {error && <p className="text-sm text-red-600">{error}</p>}
       <p className="text-xs text-muted-foreground">
         Players are immediately active. Notify them via text or group chat that they can log in at{' '}
-        pool.eddiegerow.com
+        outlast.eddiegerow.com
       </p>
     </div>
   )
