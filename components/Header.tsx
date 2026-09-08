@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Users, User, ScrollText } from 'lucide-react'
+import { Users, User, ScrollText, ShieldCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/lib/auth-context'
 import { useActiveSeason } from '@/hooks/use-active-season'
@@ -18,15 +18,17 @@ interface NavLink {
 const defaultNavLink: NavLink = { href: '/pool/picks', label: 'Picks Grid', shortLabel: 'Grid' }
 
 export function Header({ navLink }: { navLink?: NavLink }) {
-  const { name, logout } = useAuth()
+  const { name, role, logout } = useAuth()
   const pathname = usePathname()
   const season = useActiveSeason()
   const link = navLink ?? defaultNavLink
+  const isCommissioner = role === 'commissioner'
 
   const navItems = [
     { href: link.href, label: link.label, icon: Users },
     { href: '/profile', label: 'Profile', icon: User },
     { href: '/rules', label: 'Rules', icon: ScrollText },
+    ...(isCommissioner ? [{ href: '/admin', label: 'Admin', icon: ShieldCheck }] : []),
   ]
 
   return (

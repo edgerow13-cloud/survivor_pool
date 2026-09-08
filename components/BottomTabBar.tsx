@@ -1,12 +1,15 @@
 'use client'
 
 import Link from 'next/link'
-import { Vote, Grid3X3, User } from 'lucide-react'
+import { Vote, Grid3X3, User, ShieldCheck } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/lib/auth-context'
 
 export function BottomTabBar() {
   const pathname = usePathname()
+  const { role } = useAuth()
+  const isCommissioner = role === 'commissioner'
 
   const tabs = [
     {
@@ -27,6 +30,16 @@ export function BottomTabBar() {
       icon: User,
       isActive: pathname.startsWith('/profile'),
     },
+    ...(isCommissioner
+      ? [
+          {
+            href: '/admin',
+            label: 'Admin',
+            icon: ShieldCheck,
+            isActive: pathname.startsWith('/admin'),
+          },
+        ]
+      : []),
   ]
 
   return (
