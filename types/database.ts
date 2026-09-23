@@ -19,6 +19,7 @@ export interface User {
   status: UserStatus
   eliminated_week: number | null
   avatar_url: string | null
+  has_paid: boolean
   created_at: string
 }
 

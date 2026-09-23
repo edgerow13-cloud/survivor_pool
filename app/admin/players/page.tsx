@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils'
 import AddPlayerForm from './AddPlayerForm'
 import DeactivateButton from './DeactivateButton'
 import ReinstateButton from './ReinstateButton'
+import PaidCheckbox from './PaidCheckbox'
 import WinnerPickCell, { type ContestantOption } from './WinnerPickCell'
 import {
   CommissionerOverridesCard,
@@ -68,6 +69,10 @@ export default async function PlayersPage() {
 
   const typedUsers = (users ?? []) as User[]
 
+  // Buy-in tracking only applies to people still in the pool
+  const buyInUsers = typedUsers.filter((u) => u.status !== 'inactive')
+  const paidCount = buyInUsers.filter((u) => u.has_paid).length
+
   // Winner pick lookups
   const winnerPickByUserId: Record<string, string> = {}
   for (const wp of winnerPicksData ?? []) {
@@ -115,6 +120,11 @@ export default async function PlayersPage() {
       <Card>
         <CardHeader>
           <CardTitle>Player List</CardTitle>
+          {buyInUsers.length > 0 && (
+            <p className="text-sm text-muted-foreground">
+              Buy-in paid: {paidCount} of {buyInUsers.length}
+            </p>
+          )}
         </CardHeader>
         <CardContent className="p-0">
           {typedUsers.length === 0 ? (
@@ -127,6 +137,7 @@ export default async function PlayersPage() {
                   <TableHead>Email</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Role</TableHead>
+                  <TableHead>Paid</TableHead>
                   <TableHead>Elim. Week</TableHead>
                   <TableHead>Winner Pick</TableHead>
                   <TableHead />
@@ -147,6 +158,13 @@ export default async function PlayersPage() {
                     </TableCell>
                     <TableCell>
                       <RoleBadge role={user.role} />
+                    </TableCell>
+                    <TableCell>
+                      <PaidCheckbox
+                        playerId={user.id}
+                        playerName={user.name}
+                        hasPaid={user.has_paid ?? false}
+                      />
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {user.eliminated_week ? `Week ${user.eliminated_week}` : '—'}
