@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireCommissioner } from '@/lib/require-commissioner'
 import { getAdminClient } from '@/lib/supabase/admin'
+import { POOL_START_WEEK } from '@/lib/pool-config'
 
 export async function POST(request: NextRequest) {
   const body = await request.json() as { userId?: string; week_id?: string; eliminated_contestant_ids?: string[] }
@@ -24,8 +25,28 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Week not found' }, { status: 404 })
   }
 
-  // If re-entering results, reverse previous eliminations for this week
-  if (week.is_results_entered) {
+  // Pre-pool weeks (backfill/reference only) record contestant boots but never
+  // affect players — no picks were collected, so nobody gets a no_pick or is eliminated.
+  const isPrePool = week.week_number < POOL_START_WEEK
+
+  // Clean up any auto-generated no_pick rows left on a pre-pool week (e.g. from
+  // results entered before this guard existed). Commissioner-set picks are kept.
+  if (isPrePool) {
+    const { error: cleanupError } = await getAdminClient()
+      .from('picks')
+      .delete()
+      .eq('week_id', week_id)
+      .is('contestant_id', null)
+      .eq('is_commissioner_override', false)
+    if (cleanupError) {
+      return NextResponse.json({ error: cleanupError.message }, { status: 500 })
+    }
+  }
+
+  // If re-entering results, reverse previous eliminations for this week.
+  // Always run this for pre-pool weeks too, so players wrongly eliminated by a
+  // pre-pool week are reinstated.
+  if (week.is_results_entered || isPrePool) {
     const { error: resetUsersError } = await getAdminClient()
       .from('users')
       .update({ status: 'active', eliminated_week: null })
@@ -91,6 +112,10 @@ export async function POST(request: NextRequest) {
     if (contestantElimError) {
       return NextResponse.json({ error: contestantElimError.message }, { status: 500 })
     }
+  }
+
+  if (isPrePool) {
+    return NextResponse.json({ ok: true })
   }
 
   // Get all picks for this week and all active users
