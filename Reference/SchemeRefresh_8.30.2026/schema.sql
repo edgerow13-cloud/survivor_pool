@@ -160,6 +160,22 @@ CREATE TABLE winner_picks (
 CREATE INDEX idx_winner_picks_user ON winner_picks(user_id);
 CREATE INDEX idx_winner_picks_season ON winner_picks(season_id);
 
+-- ---------------------------------------------------------------------
+-- season_payments
+-- Commissioner-only buy-in tracking, per user PER SEASON. Row exists =
+-- paid. RLS on with no policies: only the service-role client can touch it.
+-- ---------------------------------------------------------------------
+CREATE TABLE season_payments (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  season_id uuid NOT NULL REFERENCES seasons(id) ON DELETE CASCADE,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (user_id, season_id)
+);
+
+CREATE INDEX idx_season_payments_season ON season_payments(season_id);
+ALTER TABLE season_payments ENABLE ROW LEVEL SECURITY;
+
 COMMIT;
 
 -- ---------------------------------------------------------------------

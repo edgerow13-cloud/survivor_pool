@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils'
 import AddPlayerForm from './AddPlayerForm'
 import DeactivateButton from './DeactivateButton'
 import ReinstateButton from './ReinstateButton'
+import PaidToggle from './PaidToggle'
 import WinnerPickCell, { type ContestantOption } from './WinnerPickCell'
 import {
   CommissionerOverridesCard,
@@ -51,6 +52,7 @@ export default async function PlayersPage() {
     { data: weeksData },
     { data: allContestantsData },
     { data: winnerPicksData },
+    { data: paymentsData },
   ] = await Promise.all([
     db.from('users').select('*').order('status').order('name'),
     db
@@ -64,6 +66,7 @@ export default async function PlayersPage() {
       .eq('season_id', seasonId)
       .order('name'),
     db.from('winner_picks').select('user_id, contestant_id').eq('season_id', seasonId),
+    db.from('season_payments').select('user_id').eq('season_id', seasonId),
   ])
 
   const typedUsers = (users ?? []) as User[]
@@ -73,6 +76,8 @@ export default async function PlayersPage() {
   for (const wp of winnerPicksData ?? []) {
     winnerPickByUserId[wp.user_id as string] = wp.contestant_id as string
   }
+
+  const paidUserIds = new Set((paymentsData ?? []).map((p) => p.user_id as string))
 
   type ContestantRow = { id: string; name: string; is_eliminated: boolean; eliminated_week: number | null }
   const contestantRows = (allContestantsData ?? []) as ContestantRow[]
@@ -129,6 +134,7 @@ export default async function PlayersPage() {
                   <TableHead>Role</TableHead>
                   <TableHead>Elim. Week</TableHead>
                   <TableHead>Winner Pick</TableHead>
+                  <TableHead>Buy-in</TableHead>
                   <TableHead />
                 </TableRow>
               </TableHeader>
@@ -166,6 +172,9 @@ export default async function PlayersPage() {
                           />
                         )
                       })()}
+                    </TableCell>
+                    <TableCell>
+                      <PaidToggle playerId={user.id} paid={paidUserIds.has(user.id)} />
                     </TableCell>
                     <TableCell>
                       {user.status === 'active' && user.role !== 'commissioner' && (
